@@ -25,3 +25,12 @@ spring:
     multipart:
       max-file-size: 10MB
       max-request-size: 12MB
+
+logging:
+  level:
+    root: INFO
+    com.medvision: INFO
+    org.springframework.web: INFO
+    org.hibernate.SQL: OFF
+    org.hibernate.orm.jdbc.bind: OFF
+    org.hibernate.orm.jdbc.extract: OFF

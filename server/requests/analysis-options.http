@@ -1,0 +1,21 @@
+### Analysis configuration through Next.js
+GET http://localhost:3000/api/analysis-options
+Accept: application/json
+
+> {%
+    client.test("Analysis options are available", function () {
+        client.assert(response.status === 200, "Expected HTTP 200");
+        client.assert(
+            response.body.plannedAlgorithms.includes("OTSU"),
+            "OTSU must be listed"
+        );
+        client.assert(
+            response.body.maxFileSizeBytes === 10485760,
+            "Expected 10 MiB upload limit"
+        );
+        client.assert(
+            response.body.segmentationAvailable === false,
+            "Segmentation is not implemented yet"
+        );
+    });
+%}

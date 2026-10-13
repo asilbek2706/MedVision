@@ -1,0 +1,62 @@
+@baseUrl = http://localhost:3000
+
+### Valid parameters
+POST {{baseUrl}}/api/analysis-options/validate
+Content-Type: application/json
+Accept: application/json
+
+{
+  "algorithm": "OTSU",
+  "blurKernelSize": 5,
+  "invert": false
+}
+
+> {%
+    client.test("Valid parameters accepted", function () {
+        client.assert(response.status === 200, "Expected 200");
+        client.assert(response.body.blurKernelSize === 5, "Wrong kernel");
+    });
+%}
+
+### Invalid DTO fields
+POST {{baseUrl}}/api/analysis-options/validate
+Content-Type: application/json
+Accept: application/json
+
+{
+  "algorithm": "UNKNOWN",
+  "blurKernelSize": 20,
+  "invert": null
+}
+
+> {%
+    client.test("DTO validation returns field errors", function () {
+        client.assert(response.status === 400, "Expected 400");
+        client.assert(response.body.code === "VALIDATION_ERROR", "Wrong code");
+        const fields = response.body.fieldErrors.map(error => error.field);
+        client.assert(fields.includes("algorithm"), "Missing algorithm error");
+        client.assert(fields.includes("blurKernelSize"), "Missing kernel error");
+        client.assert(fields.includes("invert"), "Missing invert error");
+    });
+%}
+
+### Even kernel rejected by service
+POST {{baseUrl}}/api/analysis-options/validate
+Content-Type: application/json
+Accept: application/json
+
+{
+  "algorithm": "OTSU",
+  "blurKernelSize": 4,
+  "invert": false
+}
+
+> {%
+    client.test("Business validation rejects even kernel", function () {
+        client.assert(response.status === 400, "Expected 400");
+        client.assert(
+            response.body.code === "INVALID_BLUR_KERNEL",
+            "Wrong business error code"
+        );
+    });
+%}

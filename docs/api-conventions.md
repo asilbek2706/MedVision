@@ -90,3 +90,23 @@ Next.js ularni Spring Boot’ga uzatadi.
 Parollar, session cookie, tokenlar va tasvir mazmuni loglanmaydi.
 Request body to‘liq loglanmaydi.
 Exception xabarlariga secret va foydalanuvchi ma’lumotlari qo‘shilmaydi.
+
+## Analysis options endpoints
+
+GET /api/analysis-options
+- Rejalashtirilgan algoritmlar, formatlar va limitlarni qaytaradi.
+- segmentationAvailable hozir false.
+- Upload o‘lcham limitlari upload phase’da amalga oshiriladi.
+
+POST /api/analysis-options/validate
+- Parametrlarni tekshiradi; segmentatsiya bajarmaydi.
+- algorithm: OTSU, majburiy.
+- blurKernelSize: 1–15 oralig‘idagi toq butun son, majburiy.
+- invert: boolean, majburiy.
+- Valid request: HTTP 200 va tekshirilgan parametrlar.
+- DTO xatosi: HTTP 400, VALIDATION_ERROR va fieldErrors.
+- Juft kernel: HTTP 400, INVALID_BLUR_KERNEL.
+
+HTTP misollar:
+- server/requests/analysis-options.http
+- server/requests/analysis-validation.http
