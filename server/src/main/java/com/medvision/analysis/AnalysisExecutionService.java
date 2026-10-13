@@ -40,6 +40,124 @@ public class AnalysisExecutionService {
             UUID imageId,
             AnalysisParametersRequest request
     ) {
+        validate(request);
+
+        int blur = request.blurKernelSize();
+
+        var options = new SegmentationService.Options(
+                request.invert(), blur, 3, 50
+        );
+
+        UUID analysisId = transactions.execute(status -> {
+            var image = images.findByIdAndUser_Id(imageId, ownerId)
+                    .orElseThrow(() -> new ApiException(
+                            HttpStatus.NOT_FOUND,
+                            "NOT_FOUND",
+                            "Image not found."
+                    ));
+
+            var analysis = new Analysis(
+                    image,
+                    "OTSU",
+                    Map.of(
+                            "invert", request.invert(),
+                            "blurKernelSize", blur,
+                            "morphologySize", 3,
+                            "minArea", 50
+                    )
+            );
+
+            return analyses.saveAndFlush(analysis).getId();
+        });
+
+        if (analysisId == null) {
+            throw new IllegalStateException("Analysis ID missing.");
+        }
+
+        String maskKey = null;
+        String overlayKey = null;
+
+        try {
+            var source = transactions.execute(status ->
+                    images.findByIdAndUser_Id(imageId, ownerId)
+                            .map(image -> new Source(
+                                    image.getStorageKey(),
+                                    image.getSizeBytes()
+                            ))
+                            .orElseThrow(() -> new IllegalStateException(
+                                    "Analysis source no longer exists."
+                            ))
+            );
+
+            if (source == null) {
+                throw new IllegalStateException("Source metadata missing.");
+            }
+
+            byte[] input = storage.read(source.storageKey());
+
+            if (input.length != source.sizeBytes()) {
+                throw new IllegalStateException("Source size mismatch.");
+            }
+
+            var result = segmentation.segment(input, options);
+
+            maskKey = storage.store(result.maskPng(), "png");
+            overlayKey = storage.store(result.overlayPng(), "png");
+
+            final String finalMaskKey = maskKey;
+            final String finalOverlayKey = overlayKey;
+
+            var response = transactions.execute(status -> {
+                var analysis = analyses.findById(analysisId)
+                        .orElseThrow(() -> new IllegalStateException(
+                                "Analysis record missing."
+                        ));
+
+                analysis.complete(
+                        finalMaskKey,
+                        finalOverlayKey,
+                        result.foregroundPixels(),
+                        result.foregroundPercent() / 100.0,
+                        result.processingMillis()
+                );
+
+                return AnalysisResponse.from(
+                        analyses.saveAndFlush(analysis)
+                );
+            });
+
+            if (response == null) {
+                throw new IllegalStateException(
+                        "Analysis completion returned no result."
+                );
+            }
+
+            return response;
+        } catch (RuntimeException ex) {
+            cleanup(overlayKey, ex);
+            cleanup(maskKey, ex);
+
+            try {
+                transactions.executeWithoutResult(status -> {
+                    var analysis = analyses.findById(analysisId)
+                            .orElseThrow(() -> new IllegalStateException(
+                                    "Analysis record missing."
+                            ));
+
+                    if (analysis.getStatus() == AnalysisStatus.PROCESSING) {
+                        analysis.fail("SEGMENTATION_FAILED");
+                        analyses.saveAndFlush(analysis);
+                    }
+                });
+            } catch (RuntimeException failure) {
+                ex.addSuppressed(failure);
+            }
+
+            throw ex;
+        }
+    }
+
+    private void validate(AnalysisParametersRequest request) {
         if (request == null
                 || !"OTSU".equals(request.algorithm())
                 || request.blurKernelSize() == null
@@ -59,90 +177,6 @@ public class AnalysisExecutionService {
                     "INVALID_BLUR_KERNEL",
                     "Blur kernel must be odd and between 1 and 15."
             );
-        }
-
-        var options = new SegmentationService.Options(
-                request.invert(), blur, 3, 50
-        );
-
-        var source = transactions.execute(status ->
-                images.findByIdAndUser_Id(imageId, ownerId)
-                        .map(image -> new Source(
-                                image.getStorageKey(),
-                                image.getSizeBytes()
-                        ))
-                        .orElseThrow(() -> new ApiException(
-                                HttpStatus.NOT_FOUND,
-                                "NOT_FOUND",
-                                "Image not found."
-                        ))
-        );
-
-        if (source == null) {
-            throw new IllegalStateException("Source metadata missing.");
-        }
-
-        byte[] input = storage.read(source.storageKey());
-
-        if (input.length != source.sizeBytes()) {
-            throw new IllegalStateException("Source size mismatch.");
-        }
-
-        var result = segmentation.segment(input, options);
-
-        String maskKey = null;
-        String overlayKey = null;
-
-        try {
-            maskKey = storage.store(result.maskPng(), "png");
-            overlayKey = storage.store(result.overlayPng(), "png");
-
-            final String finalMaskKey = maskKey;
-            final String finalOverlayKey = overlayKey;
-
-            var response = transactions.execute(status -> {
-                var image = images.findByIdAndUser_Id(imageId, ownerId)
-                        .orElseThrow(() -> new ApiException(
-                                HttpStatus.NOT_FOUND,
-                                "NOT_FOUND",
-                                "Image not found."
-                        ));
-
-                var analysis = new Analysis(
-                        image,
-                        "OTSU",
-                        Map.of(
-                                "invert", request.invert(),
-                                "blurKernelSize", blur,
-                                "morphologySize", 3,
-                                "minArea", 50
-                        )
-                );
-
-                analysis.complete(
-                        finalMaskKey,
-                        finalOverlayKey,
-                        result.foregroundPixels(),
-                        result.foregroundPercent() / 100.0,
-                        result.processingMillis()
-                );
-
-                return AnalysisResponse.from(
-                        analyses.saveAndFlush(analysis)
-                );
-            });
-
-            if (response == null) {
-                throw new IllegalStateException(
-                        "Analysis transaction returned no result."
-                );
-            }
-
-            return response;
-        } catch (RuntimeException ex) {
-            cleanup(overlayKey, ex);
-            cleanup(maskKey, ex);
-            throw ex;
         }
     }
 
