@@ -1,4 +1,5 @@
-@baseUrl = http://localhost:8080
+@baseUrl = http://localhost:18080
+@frontUrl = http://localhost:3000
 
 ### Backend health
 GET {{baseUrl}}/api/health
@@ -17,6 +18,19 @@ Accept: application/json
         client.assert(
             response.body.status === "running",
             "Unexpected status"
+        );
+    });
+%}
+### Backend health through Next.js
+GET {{frontUrl}}/api/health
+Accept: application/json
+
+> {%
+    client.test("Next.js forwards request to Spring Boot", function () {
+        client.assert(response.status === 200, "Expected HTTP 200");
+        client.assert(
+            response.body.service === "medvision-server",
+            "Unexpected service"
         );
     });
 %}
