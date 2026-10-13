@@ -1,0 +1,151 @@
+@baseUrl = http://localhost:3000
+@testPassword = MedVision-Test-2026!
+
+### 1. Get CSRF and prepare a unique test email
+GET {{baseUrl}}/api/auth/csrf
+Accept: application/json
+
+> {%
+    client.test("CSRF available", function () {
+        client.assert(response.status === 200, "Expected 200");
+    });
+    if (response.status === 200) {
+        client.global.set("csrfToken", response.body.token);
+        client.global.set("authTestEmail", "auth-" + Date.now() + "@example.test");
+    }
+%}
+
+### 2. Register - creates one test user
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+Accept: application/json
+X-CSRF-TOKEN: {{csrfToken}}
+
+{
+  "name": "MedVision Test",
+  "email": "{{authTestEmail}}",
+  "password": "{{testPassword}}"
+}
+
+> {%
+    client.test("Registration succeeds", function () {
+        client.assert(response.status === 201, "Expected 201");
+        client.assert(response.body.email === client.global.get("authTestEmail"), "Wrong email");
+        client.assert(!("passwordHash" in response.body), "Password hash exposed");
+    });
+    if (response.status === 201) {
+        client.global.set("authTestUserId", response.body.id);
+    }
+%}
+
+### 3. Duplicate email rejected
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+Accept: application/json
+X-CSRF-TOKEN: {{csrfToken}}
+
+{
+  "name": "MedVision Test",
+  "email": "{{authTestEmail}}",
+  "password": "{{testPassword}}"
+}
+
+> {%
+    client.test("Duplicate rejected", function () {
+        client.assert(response.status === 409, "Expected 409");
+        client.assert(response.body.code === "EMAIL_ALREADY_EXISTS", "Wrong code");
+    });
+%}
+
+### 4. Wrong password rejected
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+Accept: application/json
+X-CSRF-TOKEN: {{csrfToken}}
+
+{
+  "email": "{{authTestEmail}}",
+  "password": "Wrong-Password-2026!"
+}
+
+> {%
+    client.test("Invalid credentials rejected", function () {
+        client.assert(response.status === 401, "Expected 401");
+        client.assert(response.body.code === "INVALID_CREDENTIALS", "Wrong code");
+    });
+%}
+
+### 5. Login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+Accept: application/json
+X-CSRF-TOKEN: {{csrfToken}}
+
+{
+  "email": "{{authTestEmail}}",
+  "password": "{{testPassword}}"
+}
+
+> {%
+    client.test("Login succeeds", function () {
+        client.assert(response.status === 200, "Expected 200");
+        client.assert(response.body.id === client.global.get("authTestUserId"), "Wrong user");
+    });
+%}
+
+### 6. Refresh CSRF after login
+GET {{baseUrl}}/api/auth/csrf
+Accept: application/json
+
+> {%
+    client.test("Fresh CSRF available", function () {
+        client.assert(response.status === 200, "Expected 200");
+    });
+    if (response.status === 200) {
+        client.global.set("csrfToken", response.body.token);
+    }
+%}
+
+### 7. Session identifies current user
+GET {{baseUrl}}/api/auth/me
+Accept: application/json
+
+> {%
+    client.test("Session persists", function () {
+        client.assert(response.status === 200, "Expected 200");
+        client.assert(response.body.id === client.global.get("authTestUserId"), "Wrong user");
+        client.assert(!("passwordHash" in response.body), "Password hash exposed");
+    });
+%}
+
+### 8. Protected endpoint after login
+GET {{baseUrl}}/api/analysis-options
+Accept: application/json
+
+> {%
+    client.test("Authenticated access works", function () {
+        client.assert(response.status === 200, "Expected 200");
+    });
+%}
+
+### 9. Logout
+POST {{baseUrl}}/api/auth/logout
+Accept: application/json
+X-CSRF-TOKEN: {{csrfToken}}
+
+> {%
+    client.test("Logout succeeds", function () {
+        client.assert(response.status === 204, "Expected 204");
+    });
+%}
+
+### 10. Session no longer authenticates
+GET {{baseUrl}}/api/auth/me
+Accept: application/json
+
+> {%
+    client.test("Logout removes authentication", function () {
+        client.assert(response.status === 401, "Expected 401");
+        client.assert(response.body.code === "UNAUTHORIZED", "Wrong code");
+    });
+%}

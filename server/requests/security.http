@@ -1,0 +1,39 @@
+@baseUrl = http://localhost:3000
+
+### Get CSRF token and session cookie
+GET {{baseUrl}}/api/auth/csrf
+Accept: application/json
+
+> {%
+    client.test("CSRF token is available", function () {
+        client.assert(response.status === 200, "Expected 200");
+        client.assert(response.body.headerName === "X-CSRF-TOKEN", "Wrong header");
+        client.assert(response.body.token.length > 0, "Missing token");
+    });
+    client.global.set("csrfToken", response.body.token);
+%}
+
+### Protected endpoint requires login
+GET {{baseUrl}}/api/analysis-options
+Accept: application/json
+
+> {%
+    client.test("Anonymous request returns JSON 401", function () {
+        client.assert(response.status === 401, "Expected 401");
+        client.assert(response.body.code === "UNAUTHORIZED", "Wrong code");
+    });
+%}
+
+### POST without CSRF must fail
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+Accept: application/json
+
+{}
+
+> {%
+    client.test("Missing CSRF is rejected", function () {
+        client.assert(response.status === 403, "Expected 403");
+        client.assert(response.body.code === "ACCESS_DENIED", "Wrong code");
+    });
+%}

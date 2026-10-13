@@ -1,0 +1,266 @@
+@baseUrl = http://localhost:3000
+@backendUrl = http://localhost:18080
+
+### 1. Fresh session cookie attributes
+# @no-cookie-jar
+GET {{baseUrl}}/api/auth/csrf
+Accept: application/json
+
+> {%
+    client.test("Session cookie is protected", function () {
+        client.assert(response.status === 200, "Expected 200");
+        const cookie = response.headers.valueOf("Set-Cookie") || "";
+        client.assert(cookie.includes("MEDVISION_SESSION="), "Missing session cookie");
+        client.assert(/;\s*HttpOnly/i.test(cookie), "Missing HttpOnly");
+        client.assert(/;\s*SameSite=Lax/i.test(cookie), "Wrong SameSite");
+        client.assert(/;\s*Path=\//i.test(cookie), "Wrong cookie path");
+    });
+%}
+
+### 2. Allowed frontend CORS preflight
+OPTIONS {{backendUrl}}/api/auth/login
+Origin: http://localhost:3000
+Access-Control-Request-Method: POST
+Access-Control-Request-Headers: content-type,x-csrf-token
+
+> {%
+    client.test("Exact frontend origin allowed", function () {
+        client.assert(response.status >= 200 && response.status < 300, "Preflight failed");
+        client.assert(
+            response.headers.valueOf("Access-Control-Allow-Origin") === "http://localhost:3000",
+            "Wrong allowed origin"
+        );
+        client.assert(
+            response.headers.valueOf("Access-Control-Allow-Credentials") === "true",
+            "Credentials not allowed"
+        );
+    });
+%}
+
+### 3. Untrusted origin rejected
+OPTIONS {{backendUrl}}/api/auth/login
+Origin: https://untrusted.example
+Access-Control-Request-Method: POST
+Access-Control-Request-Headers: content-type,x-csrf-token
+
+> {%
+    client.test("Untrusted origin rejected", function () {
+        client.assert(response.status === 403, "Expected 403");
+        client.assert(
+            !response.headers.valueOf("Access-Control-Allow-Origin"),
+            "Untrusted origin was allowed"
+        );
+    });
+%}
+
+### 4. CSRF for login rate-limit checks
+GET {{baseUrl}}/api/auth/csrf
+Accept: application/json
+
+> {%
+    client.test("CSRF available", function () {
+        client.assert(response.status === 200, "Expected 200");
+    });
+    if (response.status === 200) {
+        client.global.set("finalCsrf", response.body.token);
+        client.global.set("limitTestEmail", "limit-" + Date.now() + "@example.test");
+    }
+%}
+### Login attempt 1
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+Accept: application/json
+X-CSRF-TOKEN: {{finalCsrf}}
+
+{
+  "email": "{{limitTestEmail}}",
+  "password": "Wrong-Password-2026!"
+}
+
+> {%
+    client.test("Login limit attempt 1", function () {
+        client.assert(response.status === 401, "Unexpected HTTP status");
+        client.assert(response.body.code === "INVALID_CREDENTIALS", "Wrong error code");
+    });
+%}
+
+### Login attempt 2
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+Accept: application/json
+X-CSRF-TOKEN: {{finalCsrf}}
+
+{
+  "email": "{{limitTestEmail}}",
+  "password": "Wrong-Password-2026!"
+}
+
+> {%
+    client.test("Login limit attempt 2", function () {
+        client.assert(response.status === 401, "Unexpected HTTP status");
+        client.assert(response.body.code === "INVALID_CREDENTIALS", "Wrong error code");
+    });
+%}
+
+### Login attempt 3
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+Accept: application/json
+X-CSRF-TOKEN: {{finalCsrf}}
+
+{
+  "email": "{{limitTestEmail}}",
+  "password": "Wrong-Password-2026!"
+}
+
+> {%
+    client.test("Login limit attempt 3", function () {
+        client.assert(response.status === 401, "Unexpected HTTP status");
+        client.assert(response.body.code === "INVALID_CREDENTIALS", "Wrong error code");
+    });
+%}
+
+### Login attempt 4
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+Accept: application/json
+X-CSRF-TOKEN: {{finalCsrf}}
+
+{
+  "email": "{{limitTestEmail}}",
+  "password": "Wrong-Password-2026!"
+}
+
+> {%
+    client.test("Login limit attempt 4", function () {
+        client.assert(response.status === 401, "Unexpected HTTP status");
+        client.assert(response.body.code === "INVALID_CREDENTIALS", "Wrong error code");
+    });
+%}
+
+### Login attempt 5
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+Accept: application/json
+X-CSRF-TOKEN: {{finalCsrf}}
+
+{
+  "email": "{{limitTestEmail}}",
+  "password": "Wrong-Password-2026!"
+}
+
+> {%
+    client.test("Login limit attempt 5", function () {
+        client.assert(response.status === 401, "Unexpected HTTP status");
+        client.assert(response.body.code === "INVALID_CREDENTIALS", "Wrong error code");
+    });
+%}
+
+### Login attempt 6
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+Accept: application/json
+X-CSRF-TOKEN: {{finalCsrf}}
+
+{
+  "email": "{{limitTestEmail}}",
+  "password": "Wrong-Password-2026!"
+}
+
+> {%
+    client.test("Login limit attempt 6", function () {
+        client.assert(response.status === 401, "Unexpected HTTP status");
+        client.assert(response.body.code === "INVALID_CREDENTIALS", "Wrong error code");
+    });
+%}
+
+### Login attempt 7
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+Accept: application/json
+X-CSRF-TOKEN: {{finalCsrf}}
+
+{
+  "email": "{{limitTestEmail}}",
+  "password": "Wrong-Password-2026!"
+}
+
+> {%
+    client.test("Login limit attempt 7", function () {
+        client.assert(response.status === 401, "Unexpected HTTP status");
+        client.assert(response.body.code === "INVALID_CREDENTIALS", "Wrong error code");
+    });
+%}
+
+### Login attempt 8
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+Accept: application/json
+X-CSRF-TOKEN: {{finalCsrf}}
+
+{
+  "email": "{{limitTestEmail}}",
+  "password": "Wrong-Password-2026!"
+}
+
+> {%
+    client.test("Login limit attempt 8", function () {
+        client.assert(response.status === 401, "Unexpected HTTP status");
+        client.assert(response.body.code === "INVALID_CREDENTIALS", "Wrong error code");
+    });
+%}
+
+### Login attempt 9
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+Accept: application/json
+X-CSRF-TOKEN: {{finalCsrf}}
+
+{
+  "email": "{{limitTestEmail}}",
+  "password": "Wrong-Password-2026!"
+}
+
+> {%
+    client.test("Login limit attempt 9", function () {
+        client.assert(response.status === 401, "Unexpected HTTP status");
+        client.assert(response.body.code === "INVALID_CREDENTIALS", "Wrong error code");
+    });
+%}
+
+### Login attempt 10
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+Accept: application/json
+X-CSRF-TOKEN: {{finalCsrf}}
+
+{
+  "email": "{{limitTestEmail}}",
+  "password": "Wrong-Password-2026!"
+}
+
+> {%
+    client.test("Login limit attempt 10", function () {
+        client.assert(response.status === 401, "Unexpected HTTP status");
+        client.assert(response.body.code === "INVALID_CREDENTIALS", "Wrong error code");
+    });
+%}
+
+### Login attempt 11
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+Accept: application/json
+X-CSRF-TOKEN: {{finalCsrf}}
+
+{
+  "email": "{{limitTestEmail}}",
+  "password": "Wrong-Password-2026!"
+}
+
+> {%
+    client.test("Login limit attempt 11", function () {
+        client.assert(response.status === 429, "Unexpected HTTP status");
+        client.assert(response.body.code === "LOGIN_RATE_LIMITED", "Wrong error code");
+    });
+%}
+

@@ -1,5 +1,14 @@
 server:
   port: 8080
+  servlet:
+    session:
+      timeout: 30m
+      cookie:
+        name: MEDVISION_SESSION
+        http-only: true
+        same-site: lax
+        secure: ${SESSION_COOKIE_SECURE:false}
+        path: /
 
 spring:
   application:
