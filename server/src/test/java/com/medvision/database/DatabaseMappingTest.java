@@ -60,7 +60,7 @@ class DatabaseMappingTest {
         Analysis analysis = analyses.saveAndFlush(new Analysis(
                 image,
                 "OTSU",
-                Map.of("blurKernelSize", 5, "invert", false)
+                "Test tahlil", Map.of("blurKernelSize", 5, "invert", false)
         ));
 
         UUID ownerId = owner.getId();
@@ -87,7 +87,7 @@ class DatabaseMappingTest {
         User other = createUser();
         MedicalImage image = createImage(owner);
         Analysis analysis = analyses.saveAndFlush(new Analysis(
-                image, "OTSU", Map.of()
+                image, "OTSU", "Test tahlil", Map.of()
         ));
 
         assertTrue(images.findByIdAndUser_Id(
@@ -119,7 +119,7 @@ class DatabaseMappingTest {
     @Test
     void preventsDeletingImageWithAnalysis() {
         MedicalImage image = createImage(createUser());
-        analyses.saveAndFlush(new Analysis(image, "OTSU", Map.of()));
+        analyses.saveAndFlush(new Analysis(image, "OTSU", "Test tahlil", Map.of()));
 
         assertThrows(DataIntegrityViolationException.class, () -> {
             UUID imageId = image.getId();
@@ -146,7 +146,7 @@ class DatabaseMappingTest {
     void persistsCompletedAnalysisAndPreventsSecondFinalization() {
         MedicalImage image = createImage(createUser());
         Analysis analysis = analyses.saveAndFlush(
-                new Analysis(image, "OTSU", Map.of())
+                new Analysis(image, "OTSU", "Test tahlil", Map.of())
         );
 
         analysis.complete("masks/test.png", "overlays/test.png",
@@ -169,7 +169,7 @@ class DatabaseMappingTest {
     @Test
     void persistsFailedAnalysis() {
         Analysis analysis = analyses.saveAndFlush(new Analysis(
-                createImage(createUser()), "OTSU", Map.of()
+                createImage(createUser()), "OTSU", "Test tahlil", Map.of()
         ));
 
         analysis.fail("PROCESSING_FAILED");

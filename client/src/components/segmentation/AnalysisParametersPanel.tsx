@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { SlidersHorizontal, Info } from "lucide-react";
 import type { AnalysisParameters } from "@/lib/segmentation-types";
@@ -35,18 +35,28 @@ export function AnalysisParametersPanel({
 
       <div className="space-y-6">
         <div>
-          <p className="mb-2 text-sm font-semibold text-[var(--foreground)]">
-            Algoritm
+          <label
+            htmlFor="analysis-name"
+            className="mb-2 block text-sm font-semibold text-[var(--foreground)]"
+          >
+            Tahlil nomi <span className="text-red-500">*</span>
+          </label>
+          <input
+            id="analysis-name"
+            type="text"
+            value={value.name ?? ""}
+            maxLength={120}
+            required
+            disabled={disabled}
+            placeholder="Masalan: Miya MRT - 1-tahlil"
+            onChange={(event) =>
+              onChange({ ...value, name: event.target.value })
+            }
+            className="med-input w-full disabled:opacity-50"
+          />
+          <p className="mt-2 text-xs text-[var(--muted)]">
+            Tahlilni Dashboard va History sahifalarida shu nom bilan topasiz.
           </p>
-
-          <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] px-4 py-4">
-            <p className="text-sm font-bold text-[var(--foreground)]">
-              OTSU
-            </p>
-            <p className="mt-1 text-xs text-[var(--muted)]">
-              Automatic Thresholding
-            </p>
-          </div>
         </div>
 
         <div>

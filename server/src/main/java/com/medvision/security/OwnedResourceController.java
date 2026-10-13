@@ -1,6 +1,8 @@
 package com.medvision.security;
 
 import com.medvision.analysis.AnalysisResponse;
+import com.medvision.analysis.RenameAnalysisRequest;
+import jakarta.validation.Valid;
 import com.medvision.analysis.AnalysisStatus;
 import org.springframework.format.annotation.DateTimeFormat;
 import java.time.Instant;
@@ -53,6 +55,17 @@ public class OwnedResourceController {
         return resources.analyses(
                 ownerId(authentication), page, size,
                 status, algorithm, from, to
+        );
+    }
+
+    @PatchMapping("/analyses/{id}")
+    public AnalysisResponse renameAnalysis(
+            Authentication authentication,
+            @PathVariable UUID id,
+            @Valid @RequestBody RenameAnalysisRequest request
+    ) {
+        return resources.renameAnalysis(
+                ownerId(authentication), id, request.name()
         );
     }
 

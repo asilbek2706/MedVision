@@ -77,6 +77,25 @@ public class OwnedResourceService {
         );
     }
 
+    @Transactional
+    public AnalysisResponse renameAnalysis(
+            UUID ownerId, UUID id, String name
+    ) {
+        Analysis analysis = analyses.findByIdAndImage_User_Id(id, ownerId)
+                .orElseThrow(OwnedResourceService::notFound);
+
+        if (name == null || name.isBlank() || name.trim().length() > 120) {
+            throw new ApiException(
+                    HttpStatus.BAD_REQUEST,
+                    "INVALID_ANALYSIS_NAME",
+                    "Tahlil nomi 1-120 ta belgi oralig'ida bo'lishi kerak."
+            );
+        }
+
+        analysis.rename(name);
+        return AnalysisResponse.from(analyses.save(analysis));
+    }
+
     public AnalysisResponse analysis(UUID ownerId, UUID id) {
         return AnalysisResponse.from(
                 analyses.findByIdAndImage_User_Id(id, ownerId)

@@ -7,6 +7,7 @@ import java.util.UUID;
 public record AnalysisResponse(
         UUID id,
         UUID imageId,
+        String name,
         String algorithm,
         Map<String, Object> parameters,
         AnalysisStatus status,
@@ -21,6 +22,7 @@ public record AnalysisResponse(
         return new AnalysisResponse(
                 analysis.getId(),
                 analysis.getImage().getId(),
+                analysis.getName(),
                 analysis.getAlgorithm(),
                 analysis.getParameters(),
                 analysis.getStatus(),

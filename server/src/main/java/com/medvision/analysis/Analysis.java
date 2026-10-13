@@ -25,6 +25,9 @@ public class Analysis {
     @Column(nullable = false, length = 50)
     private String algorithm;
 
+    @Column(name = "name", nullable = false, length = 120)
+    private String name;
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(nullable = false, columnDefinition = "jsonb")
     private Map<String, Object> parameters;
@@ -63,10 +66,16 @@ public class Analysis {
     public Analysis(
             MedicalImage image,
             String algorithm,
+            String name,
             Map<String, Object> parameters
     ) {
         this.image = Objects.requireNonNull(image);
         this.algorithm = Objects.requireNonNull(algorithm).trim();
+        this.name = Objects.requireNonNull(name).trim();
+
+        if (this.name.isEmpty() || this.name.length() > 120) {
+            throw new IllegalArgumentException("Invalid analysis name.");
+        }
 
         if (this.algorithm.isEmpty() || this.algorithm.length() > 50) {
             throw new IllegalArgumentException("Invalid algorithm.");
@@ -133,9 +142,19 @@ public class Analysis {
         return key;
     }
 
+    public void rename(String newName) {
+        if (newName == null || newName.isBlank()
+                || newName.trim().length() > 120) {
+            throw new IllegalArgumentException("Invalid analysis name.");
+        }
+
+        this.name = newName.trim();
+    }
+
     public UUID getId() { return id; }
     public MedicalImage getImage() { return image; }
     public String getAlgorithm() { return algorithm; }
+    public String getName() { return name; }
     public Map<String, Object> getParameters() {
         return Map.copyOf(parameters);
     }
