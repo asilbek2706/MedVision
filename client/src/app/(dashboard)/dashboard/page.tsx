@@ -1,13 +1,19 @@
-"use client";
+﻿"use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { ThemeSwitcher } from "@/components/ui/ThemeSwitcher";
+import { MedVisionLogo } from "@/components/ui/MedVisionLogo";
+import { LoadingState } from "@/components/ui/LoadingState";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { EmptyState } from "@/components/ui/EmptyState";
 import {
   authApi,
   ApiRequestError,
   type CurrentUser,
 } from "@/lib/api";
+import Image from "next/image";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -16,6 +22,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [retryKey, setRetryKey] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -49,7 +56,13 @@ export default function DashboardPage() {
     return () => {
       active = false;
     };
-  }, [router]);
+  }, [router, retryKey]);
+
+  const handleRetry = useCallback(() => {
+    setError("");
+    setLoading(true);
+    setRetryKey((value) => value + 1);
+  }, []);
 
   async function handleLogout() {
     if (busy) return;
@@ -72,81 +85,105 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#f4f8fa]">
-        <p role="status" className="text-slate-600">
-          Yuklanmoqda...
-        </p>
+      <main className="min-h-screen bg-[var(--background)]">
+        <LoadingState
+          fullPage
+          title="Dashboard yuklanmoqda"
+          description="MedVision hisobingiz xavfsiz tekshirilmoqda."
+        />
       </main>
     );
   }
 
   if (!user) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#f4f8fa] px-4">
-        <section className="med-card w-full max-w-md p-8 text-center">
-          <p role="alert" className="mb-4 text-slate-600">
-            {error || "Tizimga kirish talab qilinadi."}
-          </p>
-          <Link href="/login" className="font-semibold text-teal-700">
-            Kirish sahifasiga o'tish
-          </Link>
-        </section>
+      <main className="flex min-h-screen items-center justify-center bg-[var(--background)] px-4 py-10">
+        <div className="w-full max-w-lg">
+          <ErrorState
+            title="Dashboard ochilmadi"
+            description={error || "Tizimga kirish talab qilinadi."}
+            onRetry={handleRetry}
+          />
+          <div className="mt-5 text-center">
+            <Link
+              href="/login"
+              className="text-sm font-semibold text-[var(--primary)] hover:underline"
+            >
+              Kirish sahifasiga o&apos;tish
+            </Link>
+          </div>
+        </div>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-[#f4f8fa] px-4 py-10 sm:px-8">
+    <main className="min-h-screen bg-[var(--background)] px-4 py-10 sm:px-8">
       <div className="mx-auto max-w-5xl">
         <header className="mb-8 flex flex-wrap items-center justify-between gap-4">
-          <Link href="/" className="text-xl font-extrabold text-teal-700">
-            MedVision
-          </Link>
+          <MedVisionLogo href="/dashboard" size="header" />
 
-          <button
-            type="button"
-            onClick={handleLogout}
-            disabled={busy}
-            className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-          >
-            {busy ? "Chiqilmoqda..." : "Tizimdan chiqish"}
-          </button>
+          <div className="flex flex-wrap items-center gap-3">
+            <ThemeSwitcher />
+            <button
+              type="button"
+              onClick={handleLogout}
+              disabled={busy}
+              className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-5 py-3 text-sm font-semibold text-[var(--foreground)] transition-colors hover:bg-[var(--surface-muted)] disabled:opacity-50"
+            >
+              {busy ? "Chiqilmoqda..." : "Tizimdan chiqish"}
+            </button>
+          </div>
         </header>
 
         <section className="med-card p-7 sm:p-10">
-          <p className="mb-2 text-sm font-semibold text-teal-700">
+          <p className="mb-2 text-sm font-semibold text-[var(--primary)]">
             MEDVISION DASHBOARD
           </p>
 
-          <h1 className="text-3xl font-extrabold text-slate-900">
+          <h1 className="text-3xl font-extrabold text-[var(--foreground)]">
             Xush kelibsiz, {user.name}!
           </h1>
 
-          <p className="mt-3 text-slate-500">
+          <p className="mt-3 text-[var(--muted)]">
             Siz MedVision platformasiga muvaffaqiyatli kirdingiz.
           </p>
 
-          <div className="mt-8 rounded-2xl bg-slate-50 p-5">
-            <h2 className="mb-4 text-lg font-bold text-slate-900">
-              Shaxsiy ma'lumotlar
+          <div className="mt-8 rounded-2xl bg-[var(--surface-muted)] p-5">
+            <h2 className="mb-4 text-lg font-bold text-[var(--foreground)]">
+              Shaxsiy ma&apos;lumotlar
             </h2>
 
-            <p className="text-sm text-slate-500">Ism</p>
-            <p className="mb-4 font-semibold text-slate-900">{user.name}</p>
+            <p className="text-sm text-[var(--muted)]">Ism</p>
+            <p className="mb-4 font-semibold text-[var(--foreground)]">
+              {user.name}
+            </p>
 
-            <p className="text-sm text-slate-500">Email</p>
-            <p className="break-all font-semibold text-slate-900">
+            <p className="text-sm text-[var(--muted)]">Email</p>
+            <p className="break-all font-semibold text-[var(--foreground)]">
               {user.email}
             </p>
           </div>
 
+          <div className="mt-8">
+            <EmptyState
+              title="Hozircha tahlillar mavjud emas"
+              description="Tibbiy tasvirlar bilan ishlash bo'limi keyingi bosqichda ulanadi."
+            />
+          </div>
+
           {error && (
-            <p role="alert" className="mt-5 text-sm text-red-600">
-              {error}
-            </p>
+            <div className="mt-6">
+              <ErrorState
+                title="Amalni bajarib bo'lmadi"
+                description={error}
+              />
+            </div>
           )}
         </section>
       </div>
     </main>
   );
 }
+
+

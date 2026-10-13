@@ -1,10 +1,11 @@
-"use client";
+﻿"use client";
 
 import { useState, type FormEvent } from "react";
-import Image from "next/image";
+import { MedVisionLogo } from "@/components/ui/MedVisionLogo";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authApi } from "@/lib/api";
+import { ThemeSwitcher } from "@/components/ui/ThemeSwitcher";
 
 type AuthMode = "login" | "register";
 
@@ -51,24 +52,19 @@ export default function AuthForm({ mode }: { mode: AuthMode }) {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#f4f8fa] px-4 py-12">
+    <main className="relative flex min-h-screen items-center justify-center bg-[var(--background)] px-4 py-12 text-[var(--foreground)]">
+      <div className="absolute right-4 top-5 sm:right-8">
+        <ThemeSwitcher />
+      </div>
       <div className="w-full max-w-[440px]">
-        <Link href="/" className="mb-8 flex items-center justify-center">
-          <Image
-            src="/medvision-logo.svg"
-            alt="MedVision"
-            width={180}
-            height={56}
-            priority
-          />
-        </Link>
+        <div className="mb-8 flex justify-center"><MedVisionLogo size="auth" /></div>
 
         <section className="med-card p-7 sm:p-10">
           <div className="mb-8 text-center">
-            <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">
+            <h1 className="text-2xl font-extrabold tracking-tight text-[var(--foreground)]">
               {isRegister ? "Hisob yaratish" : "Tizimga kirish"}
             </h1>
-            <p className="mt-2 text-sm leading-6 text-slate-500">
+            <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
               {isRegister
                 ? "MedVision platformasidan foydalanish uchun ro'yxatdan o'ting."
                 : "MedVision hisobingizga kirish uchun ma'lumotlaringizni kiriting."}
@@ -89,7 +85,7 @@ export default function AuthForm({ mode }: { mode: AuthMode }) {
           <form onSubmit={handleSubmit} className="space-y-5">
             {isRegister && (
               <label className="block">
-                <span className="mb-2 block text-sm font-semibold text-slate-700">
+                <span className="mb-2 block text-sm font-semibold text-[var(--foreground)]">
                   Ism
                 </span>
                 <input
@@ -105,7 +101,7 @@ export default function AuthForm({ mode }: { mode: AuthMode }) {
             )}
 
             <label className="block">
-              <span className="mb-2 block text-sm font-semibold text-slate-700">
+              <span className="mb-2 block text-sm font-semibold text-[var(--foreground)]">
                 Email
               </span>
               <input
@@ -121,7 +117,7 @@ export default function AuthForm({ mode }: { mode: AuthMode }) {
             </label>
 
             <label className="block">
-              <span className="mb-2 block text-sm font-semibold text-slate-700">
+              <span className="mb-2 block text-sm font-semibold text-[var(--foreground)]">
                 Parol
               </span>
               <div className="relative">
@@ -143,7 +139,7 @@ export default function AuthForm({ mode }: { mode: AuthMode }) {
                   aria-label={showPassword ? "Parolni yashirish" : "Parolni ko'rsatish"}
                   aria-pressed={showPassword}
                   title={showPassword ? "Parolni yashirish" : "Parolni ko'rsatish"}
-                  className="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-slate-400 transition-colors hover:text-teal-700 focus-visible:outline-2 focus-visible:outline-teal-600"
+                  className="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-[var(--muted)] transition-colors hover:text-[var(--primary)] focus-visible:outline-2 focus-visible:outline-teal-600"
                 >
                   {showPassword ? (
                     <svg
@@ -206,21 +202,22 @@ export default function AuthForm({ mode }: { mode: AuthMode }) {
             </button>
           </form>
 
-          <p className="mt-7 text-center text-sm text-slate-500">
+          <p className="mt-7 text-center text-sm text-[var(--muted)]">
             {isRegister ? "Hisobingiz bormi?" : "Hisobingiz yo'qmi?"}{" "}
             <Link
               href={isRegister ? "/login" : "/register"}
-              className="font-bold text-teal-700 hover:underline"
+              className="font-bold text-[var(--primary)] hover:underline"
             >
               {isRegister ? "Kirish" : "Ro'yxatdan o'tish"}
             </Link>
           </p>
         </section>
 
-        <p className="mt-6 text-center text-xs text-slate-400">
-          MedVision — Medical Image Analysis
+        <p className="mt-6 text-center text-xs text-[var(--muted)]">
+          MedVision - Medical Image Analysis
         </p>
       </div>
     </main>
   );
 }
+
