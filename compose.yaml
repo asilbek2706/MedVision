@@ -33,6 +33,7 @@ services:
       - ./server/src:/app/src
       - ./server/pom.xml:/app/pom.xml:ro
       - maven_cache:/root/.m2
+      - image_storage:/app/storage
     depends_on:
       postgres:
         condition: service_healthy
@@ -59,3 +60,4 @@ volumes:
   maven_cache:
   frontend_node_modules:
   frontend_next:
+  image_storage:

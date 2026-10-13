@@ -40,3 +40,4 @@ Thumbs.db
 
 # Local code backups
 *.bak
+/server/requests/fixtures/

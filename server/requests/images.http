@@ -1,0 +1,387 @@
+@baseUrl = http://localhost:18080
+@testPassword = MedVisionTest2026!
+
+
+### 01 Get CSRF
+GET {{baseUrl}}/api/auth/csrf
+Accept: application/json
+
+> {%
+    client.test("01 Get CSRF", function () {
+        client.assert(response.status === 200, "Expected 200, got " + response.status);
+    });
+    if (response.status === 200) {
+        client.global.set("imageCsrf", response.body.token);
+const tag = Date.now();
+client.global.set("imageEmailA", "image-a-" + tag + "@example.test");
+client.global.set("imageEmailB", "image-b-" + tag + "@example.test");
+    }
+%}
+
+### 02 Register A
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+X-CSRF-TOKEN: {{imageCsrf}}
+
+{"name":"Image Owner A","email":"{{imageEmailA}}","password":"{{testPassword}}"}
+
+> {%
+    client.test("02 Register A", function () {
+        client.assert(response.status === 201, "Expected 201, got " + response.status);
+    });
+    if (response.status === 201) {
+
+    }
+%}
+
+### 03 Login A
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+X-CSRF-TOKEN: {{imageCsrf}}
+
+{"email":"{{imageEmailA}}","password":"{{testPassword}}"}
+
+> {%
+    client.test("03 Login A", function () {
+        client.assert(response.status === 200, "Expected 200, got " + response.status);
+    });
+    if (response.status === 200) {
+
+    }
+%}
+
+### 04 Refresh CSRF
+GET {{baseUrl}}/api/auth/csrf
+Accept: application/json
+
+> {%
+    client.test("04 Refresh CSRF", function () {
+        client.assert(response.status === 200, "Expected 200, got " + response.status);
+    });
+    if (response.status === 200) {
+        client.global.set("imageCsrf", response.body.token);
+    }
+%}
+
+### 05 Upload PNG
+POST {{baseUrl}}/api/images
+Content-Type: multipart/form-data; boundary=MedVisionBoundary
+Accept: application/json
+X-CSRF-TOKEN: {{imageCsrf}}
+
+--MedVisionBoundary
+Content-Disposition: form-data; name="file"; filename="valid.png"
+Content-Type: image/png
+
+< ./fixtures/valid.png
+--MedVisionBoundary--
+
+> {%
+    client.test("05 Upload PNG", function () {
+        client.assert(response.status === 201, "Expected 201, got " + response.status);
+    });
+    if (response.status === 201) {
+        const imageId = response.body.id;
+client.assert(
+    imageId !== undefined && imageId !== null,
+    "Upload response missing image ID"
+);
+client.global.set("phase5PngId", String(imageId));
+client.log("PNG ID saved: " + String(imageId));
+client.assert(
+    String(client.global.get("phase5PngId")) === String(imageId),
+    "PNG ID was not saved correctly"
+);
+client.log("Saved phase5PngId: " + imageId);
+client.assert(response.body.width === 8, "Wrong width");
+client.assert(response.body.height === 6, "Wrong height");
+client.assert(response.body.mimeType === "image/png", "Wrong MIME");
+client.assert(!("storageKey" in response.body), "Storage key exposed");
+    }
+%}
+
+### 06 Upload JPEG
+POST {{baseUrl}}/api/images
+Content-Type: multipart/form-data; boundary=MedVisionBoundary
+Accept: application/json
+X-CSRF-TOKEN: {{imageCsrf}}
+
+--MedVisionBoundary
+Content-Disposition: form-data; name="file"; filename="valid.jpg"
+Content-Type: image/jpeg
+
+< ./fixtures/valid.jpg
+--MedVisionBoundary--
+
+> {%
+    client.test("06 Upload JPEG", function () {
+        client.assert(response.status === 201, "Expected 201, got " + response.status);
+    });
+    if (response.status === 201) {
+        client.global.set("phase5JpegId", response.body.id);
+    }
+%}
+
+### 07 List own images
+GET {{baseUrl}}/api/images
+Accept: application/json
+
+> {%
+    client.test("07 List own images", function () {
+        client.assert(response.status === 200, "Expected 200, got " + response.status);
+    });
+    if (response.status === 200) {
+        client.assert(
+    response.body.items.some(item => item.id === client.global.get("phase5PngId")),
+    "Uploaded PNG missing"
+);
+    }
+%}
+
+### 08 Image detail
+GET {{baseUrl}}/api/images/{{phase5PngId}}
+Accept: application/json
+
+> {%
+    client.test("08 Image detail", function () {
+        client.assert(response.status === 200, "Expected 200, got " + response.status);
+    });
+    if (response.status === 200) {
+
+    }
+%}
+
+### 09 Owner receives image bytes
+GET {{baseUrl}}/api/images/{{phase5PngId}}/content
+Accept: image/png
+
+> {%
+    client.test("09 Owner receives image bytes", function () {
+        client.assert(response.status === 200, "Expected 200, got " + response.status);
+    });
+    if (response.status === 200) {
+        client.assert(
+    (response.headers.valueOf("Content-Type") || "").includes("image/png"),
+    "Wrong content type"
+);
+client.assert(
+    (response.headers.valueOf("Cache-Control") || "").includes("no-store"),
+    "Private image must not be cached"
+);
+    }
+%}
+
+### 10 Fake image rejected
+POST {{baseUrl}}/api/images
+Content-Type: multipart/form-data; boundary=MedVisionBoundary
+Accept: application/json
+X-CSRF-TOKEN: {{imageCsrf}}
+
+--MedVisionBoundary
+Content-Disposition: form-data; name="file"; filename="fake.png"
+Content-Type: image/png
+
+< ./fixtures/fake.png
+--MedVisionBoundary--
+
+> {%
+    client.test("10 Fake image rejected", function () {
+        client.assert(response.status === 415, "Expected 415, got " + response.status);
+    });
+    if (response.status === 415) {
+        client.assert(response.body.code === "UNSUPPORTED_IMAGE", "Wrong code");
+    }
+%}
+
+### 11 Oversized file rejected
+POST {{baseUrl}}/api/images
+Content-Type: multipart/form-data; boundary=MedVisionBoundary
+Accept: application/json
+X-CSRF-TOKEN: {{imageCsrf}}
+
+--MedVisionBoundary
+Content-Disposition: form-data; name="file"; filename="large.png"
+Content-Type: image/png
+
+< ./fixtures/large.png
+--MedVisionBoundary--
+
+> {%
+    client.test("11 Oversized file rejected", function () {
+        client.assert(response.status === 413, "Expected 413, got " + response.status);
+    });
+    if (response.status === 413) {
+        client.assert(response.body.code === "PAYLOAD_TOO_LARGE", "Wrong code");
+    }
+%}
+
+### 12 Register B
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+X-CSRF-TOKEN: {{imageCsrf}}
+
+{"name":"Image Owner B","email":"{{imageEmailB}}","password":"{{testPassword}}"}
+
+> {%
+    client.test("12 Register B", function () {
+        client.assert(response.status === 201, "Expected 201, got " + response.status);
+    });
+    if (response.status === 201) {
+
+    }
+%}
+
+### 13 Login B
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+X-CSRF-TOKEN: {{imageCsrf}}
+
+{"email":"{{imageEmailB}}","password":"{{testPassword}}"}
+
+> {%
+    client.test("13 Login B", function () {
+        client.assert(response.status === 200, "Expected 200, got " + response.status);
+    });
+    if (response.status === 200) {
+
+    }
+%}
+
+### 14 Refresh B CSRF
+GET {{baseUrl}}/api/auth/csrf
+Accept: application/json
+
+> {%
+    client.test("14 Refresh B CSRF", function () {
+        client.assert(response.status === 200, "Expected 200, got " + response.status);
+    });
+    if (response.status === 200) {
+        client.global.set("imageCsrf", response.body.token);
+    }
+%}
+
+### 15 B cannot read A image
+GET {{baseUrl}}/api/images/{{phase5PngId}}/content
+Accept: application/json
+
+> {%
+    client.test("15 B cannot read A image", function () {
+        client.assert(response.status === 404, "Expected 404, got " + response.status);
+    });
+    if (response.status === 404) {
+
+    }
+%}
+
+### 16 B cannot delete A image
+DELETE {{baseUrl}}/api/images/{{phase5PngId}}
+Accept: application/json
+X-CSRF-TOKEN: {{imageCsrf}}
+
+> {%
+    client.test("16 B cannot delete A image", function () {
+        client.assert(response.status === 404, "Expected 404, got " + response.status);
+    });
+    if (response.status === 404) {
+
+    }
+%}
+
+### 17 B list excludes A image
+GET {{baseUrl}}/api/images
+Accept: application/json
+
+> {%
+    client.test("17 B list excludes A image", function () {
+        client.assert(response.status === 200, "Expected 200, got " + response.status);
+    });
+    if (response.status === 200) {
+        client.assert(
+    !response.body.items.some(item => item.id === client.global.get("phase5PngId")),
+    "Other owner's image exposed"
+);
+    }
+%}
+
+### 18 Login A again
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+X-CSRF-TOKEN: {{imageCsrf}}
+
+{"email":"{{imageEmailA}}","password":"{{testPassword}}"}
+
+> {%
+    client.test("18 Login A again", function () {
+        client.assert(response.status === 200, "Expected 200, got " + response.status);
+    });
+    if (response.status === 200) {
+
+    }
+%}
+
+### 19 Refresh A CSRF
+GET {{baseUrl}}/api/auth/csrf
+Accept: application/json
+
+> {%
+    client.test("19 Refresh A CSRF", function () {
+        client.assert(response.status === 200, "Expected 200, got " + response.status);
+    });
+    if (response.status === 200) {
+        client.global.set("imageCsrf", response.body.token);
+    }
+%}
+
+### 20 Delete PNG
+DELETE {{baseUrl}}/api/images/{{phase5PngId}}
+Accept: application/json
+X-CSRF-TOKEN: {{imageCsrf}}
+
+> {%
+    client.test("20 Delete PNG", function () {
+        client.assert(response.status === 204, "Expected 204, got " + response.status);
+    });
+    if (response.status === 204) {
+
+    }
+%}
+
+### 21 Deleted detail is gone
+GET {{baseUrl}}/api/images/{{phase5PngId}}
+Accept: application/json
+
+> {%
+    client.test("21 Deleted detail is gone", function () {
+        client.assert(response.status === 404, "Expected 404, got " + response.status);
+    });
+    if (response.status === 404) {
+
+    }
+%}
+
+### 22 Deleted content is gone
+GET {{baseUrl}}/api/images/{{phase5PngId}}/content
+Accept: application/json
+
+> {%
+    client.test("22 Deleted content is gone", function () {
+        client.assert(response.status === 404, "Expected 404, got " + response.status);
+    });
+    if (response.status === 404) {
+
+    }
+%}
+
+### 23 Delete JPEG
+DELETE {{baseUrl}}/api/images/{{phase5JpegId}}
+Accept: application/json
+X-CSRF-TOKEN: {{imageCsrf}}
+
+> {%
+    client.test("23 Delete JPEG", function () {
+        client.assert(response.status === 204, "Expected 204, got " + response.status);
+    });
+    if (response.status === 204) {
+
+    }
+%}
