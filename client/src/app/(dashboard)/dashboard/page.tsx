@@ -13,7 +13,7 @@ import {
   ApiRequestError,
   type CurrentUser,
 } from "@/lib/api";
-import Image from "next/image";
+
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -165,7 +165,31 @@ export default function DashboardPage() {
             </p>
           </div>
 
-          <div className="mt-8">
+          <div className="mt-8 rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-6 sm:p-8">
+  <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <p className="text-xs font-bold uppercase tracking-widest text-[var(--primary)]">
+        MEDVISION ANALYSIS STUDIO
+      </p>
+      <h2 className="mt-2 text-xl font-bold text-[var(--foreground)]">
+        Tibbiy tasvirlarni tahlil qilish
+      </h2>
+      <p className="mt-2 max-w-md text-sm leading-6 text-[var(--muted)]">
+        PNG yoki JPEG tasvir yuklang va segmentatsiya jarayonini boshlang.
+      </p>
+    </div>
+
+    <Link
+      href="/dashboard/segment"
+      className="med-button med-button-primary shrink-0"
+    >
+      Tahlilni boshlash
+      <span aria-hidden="true">→</span>
+    </Link>
+  </div>
+</div>
+
+<div className="mt-8">
             <EmptyState
               title="Hozircha tahlillar mavjud emas"
               description="Tibbiy tasvirlar bilan ishlash bo'limi keyingi bosqichda ulanadi."
@@ -185,5 +209,7 @@ export default function DashboardPage() {
     </main>
   );
 }
+
+
 
 
