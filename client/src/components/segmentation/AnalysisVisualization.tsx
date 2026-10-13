@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import { Images, AlertCircle, LoaderCircle, Download } from "lucide-react";
@@ -266,4 +266,3 @@ function ImageCard({
     </div>
   );
 }
-

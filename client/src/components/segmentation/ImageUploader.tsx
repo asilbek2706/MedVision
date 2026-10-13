@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useRef, useState } from "react";
 import type { ChangeEvent, DragEvent } from "react";
@@ -224,4 +224,3 @@ function Metadata({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
-
