@@ -25,7 +25,8 @@ application-local.yml
 application-local.properties
 
 # Uploaded images and generated results
-storage/
+/storage/
+/server/storage/
 uploads/
 datasets/
 
