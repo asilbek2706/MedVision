@@ -1,0 +1,38 @@
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Java build
+target/
+*.class
+*.log
+
+# Next.js
+node_modules/
+.next/
+out/
+.vercel/
+*.tsbuildinfo
+
+# Local environment
+.env
+.env.*
+!.env.example
+!.env.*.example
+application-local.yaml
+application-local.yml
+application-local.properties
+
+# Uploaded images and generated results
+storage/
+uploads/
+datasets/
+
+# HTTP client local data
+.http/
+http-client.private.env.json
+
+# OS
+Thumbs.db
+.DS_Store

@@ -1,0 +1,22 @@
+@baseUrl = http://localhost:8080
+
+### Backend health
+GET {{baseUrl}}/api/health
+Accept: application/json
+
+> {%
+    client.test("Health returns HTTP 200", function () {
+        client.assert(response.status === 200, "Expected HTTP 200");
+    });
+
+    client.test("Health response is correct", function () {
+        client.assert(
+            response.body.service === "medvision-server",
+            "Unexpected service"
+        );
+        client.assert(
+            response.body.status === "running",
+            "Unexpected status"
+        );
+    });
+%}
