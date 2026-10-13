@@ -1,6 +1,9 @@
 package com.medvision.security;
 
 import com.medvision.analysis.AnalysisResponse;
+import com.medvision.analysis.AnalysisStatus;
+import org.springframework.format.annotation.DateTimeFormat;
+import java.time.Instant;
 import com.medvision.image.MedicalImageResponse;
 import com.medvision.common.pagination.PageResponse;
 import org.springframework.security.core.Authentication;
@@ -39,9 +42,18 @@ public class OwnedResourceController {
     public PageResponse<AnalysisResponse> analyses(
             Authentication authentication,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) AnalysisStatus status,
+            @RequestParam(required = false) String algorithm,
+            @RequestParam(name = "from", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant from,
+            @RequestParam(name = "to", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant to
     ) {
-        return resources.analyses(ownerId(authentication), page, size);
+        return resources.analyses(
+                ownerId(authentication), page, size,
+                status, algorithm, from, to
+        );
     }
 
     @GetMapping("/analyses/{id}")

@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.UUID;
 
 @Service
@@ -44,11 +45,35 @@ public class OwnedResourceService {
     }
 
     public PageResponse<AnalysisResponse> analyses(
-            UUID ownerId, int page, int size
+            UUID ownerId, int page, int size,
+            AnalysisStatus status, String algorithm,
+            Instant from, Instant to
     ) {
+        if (from != null && to != null && from.isAfter(to)) {
+            throw new ApiException(
+                    HttpStatus.BAD_REQUEST,
+                    "INVALID_DATE_RANGE",
+                    "Boshlanish sanasi tugash sanasidan keyin bo'lmasligi kerak."
+            );
+        }
+
+        if (algorithm != null) {
+            algorithm = algorithm.trim().toUpperCase(java.util.Locale.ROOT);
+
+            if (!algorithm.equals("OTSU")) {
+                throw new ApiException(
+                        HttpStatus.BAD_REQUEST,
+                        "INVALID_ALGORITHM",
+                        "Hozircha faqat OTSU algoritmi qo'llab-quvvatlanadi."
+                );
+            }
+        }
+
         return PageResponse.from(
-                analyses.findByImage_User_Id(ownerId, pageRequest(page, size))
-                        .map(AnalysisResponse::from)
+                analyses.findFilteredByOwner(
+                        ownerId, status, algorithm, from, to,
+                        pageRequest(page, size)
+                ).map(AnalysisResponse::from)
         );
     }
 
@@ -70,6 +95,16 @@ public class OwnedResourceService {
         return PageResponse.from(
                 analyses.findByImage_Id(imageId, pageable)
                         .map(AnalysisResponse::from)
+        );
+    }
+
+    public DashboardStatsResponse dashboardStats(UUID ownerId) {
+        return new DashboardStatsResponse(
+                images.countByUser_Id(ownerId),
+                analyses.countByImage_User_IdAndStatus(
+                        ownerId, AnalysisStatus.COMPLETED),
+                analyses.countByImage_User_IdAndStatus(
+                        ownerId, AnalysisStatus.FAILED)
         );
     }
 
