@@ -1,0 +1,46 @@
+@baseUrl = http://localhost:18080
+
+### Missing endpoint returns structured 404
+GET {{baseUrl}}/api/not-found
+Accept: application/json
+
+> {%
+    client.test("Structured 404 response", function () {
+        client.assert(response.status === 404, "Expected 404");
+        client.assert(response.body.status === 404, "Wrong body status");
+        client.assert(response.body.code === "NOT_FOUND", "Wrong code");
+        client.assert(
+            response.body.path === "/api/not-found",
+            "Wrong path"
+        );
+        client.assert(Array.isArray(response.body.fieldErrors), "Missing fieldErrors");
+        client.assert(!("trace" in response.body), "Stack trace exposed");
+    });
+%}
+
+### Health endpoint rejects POST
+POST {{baseUrl}}/api/health
+Accept: application/json
+
+> {%
+    client.test("Structured 405 response", function () {
+        client.assert(response.status === 405, "Expected 405");
+        client.assert(
+            response.body.code === "METHOD_NOT_ALLOWED",
+            "Wrong code"
+        );
+        const allow = response.headers.valueOf("Allow") || "";
+        client.assert(allow.includes("GET"), "Allow header must include GET");
+    });
+%}
+
+### Structured error through Next.js
+GET http://localhost:3000/api/not-found
+Accept: application/json
+
+> {%
+    client.test("Next.js preserves backend error", function () {
+        client.assert(response.status === 404, "Expected 404");
+        client.assert(response.body.code === "NOT_FOUND", "Wrong code");
+    });
+%}
