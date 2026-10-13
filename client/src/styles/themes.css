@@ -1,0 +1,56 @@
+/* MedVision Design Tokens */
+
+:root {
+  --background: #f4f8fa;
+  --foreground: #0f172a;
+
+  --primary: #0d9488;
+  --primary-hover: #0f766e;
+  --primary-light: #e6f7f4;
+
+  --surface: #ffffff;
+  --surface-muted: #f8fafc;
+
+  --border: #e2e8f0;
+  --muted: #64748b;
+
+  --success: #059669;
+  --danger: #dc2626;
+  --warning: #d97706;
+
+  --radius-card: 20px;
+}
+
+
+
+/* MedVision Dark Theme */
+html.dark {
+  color-scheme: dark;
+
+  --background: #0b1220;
+  --foreground: #e5edf6;
+
+  --primary: #14b8a6;
+  --primary-hover: #2dd4bf;
+  --primary-light: #123b3a;
+
+  --surface: #131f30;
+  --surface-muted: #1c2b3f;
+
+  --border: #304156;
+  --muted: #94a3b8;
+}
+
+html.dark .med-card {
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.18);
+}
+
+html.dark .med-input {
+  background: var(--surface-muted);
+  color: var(--foreground);
+}
+
+html.dark ::selection {
+  background: #0f766e;
+  color: #ffffff;
+}

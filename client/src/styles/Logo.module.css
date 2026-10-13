@@ -1,0 +1,11 @@
+.logo {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  transition: filter 200ms ease;
+}
+
+:global(html.dark) .logo {
+  filter: brightness(0) invert(1);
+}

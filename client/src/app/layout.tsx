@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 
 import "./globals.css";
+import "@/styles/themes.css";
+import { ThemeProvider } from "@/providers/ThemeProvider";
 import {ReactNode} from "react";
 
 export const metadata: Metadata = {
@@ -41,9 +43,9 @@ export default function RootLayout({
   children: ReactNode;
 }>) {
   return (
-    <html lang="uz" className="font-sans">
+    <html lang="uz" className="font-sans" suppressHydrationWarning>
       <body className="min-h-screen antialiased">
-        {children}
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );

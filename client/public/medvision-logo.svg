@@ -1,0 +1,26 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" width="640" height="180" viewBox="0 0 640 180" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">MedVision logo</title>
+  <desc id="desc">A medical cross integrated with a vision lens and image-scanning corners, beside the MedVision wordmark.</desc>
+  <defs>
+    <linearGradient id="mv-teal" x1="20" y1="20" x2="145" y2="150" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#20B8AD"/>
+      <stop offset="1" stop-color="#087E83"/>
+    </linearGradient>
+  </defs>
+  <!-- Scan frame -->
+  <path d="M48 26H30C22.268 26 16 32.268 16 40V58" stroke="url(#mv-teal)" stroke-width="9" stroke-linecap="round"/>
+  <path d="M122 26H140C147.732 26 154 32.268 154 40V58" stroke="url(#mv-teal)" stroke-width="9" stroke-linecap="round"/>
+  <path d="M16 112V130C16 137.732 22.268 144 30 144H48" stroke="url(#mv-teal)" stroke-width="9" stroke-linecap="round"/>
+  <path d="M154 112V130C154 137.732 147.732 144 140 144H122" stroke="url(#mv-teal)" stroke-width="9" stroke-linecap="round"/>
+  <!-- Lens / eye -->
+  <path d="M34 85C47 65 64 55 85 55C106 55 123 65 136 85C123 105 106 115 85 115C64 115 47 105 34 85Z" fill="#E6F7F5" stroke="#0F766E" stroke-width="5" stroke-linejoin="round"/>
+  <circle cx="85" cy="85" r="22" fill="url(#mv-teal)"/>
+  <circle cx="85" cy="85" r="9" fill="#FFFFFF"/>
+  <!-- Medical plus, subtly embedded in the pupil -->
+  <path d="M85 69V101M69 85H101" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round" opacity=".92"/>
+  <circle cx="132" cy="43" r="5" fill="#F3B64A"/>
+  <!-- Wordmark -->
+  <text x="184" y="91" font-family="Inter, Manrope, Arial, sans-serif" font-size="55" font-weight="750" letter-spacing="-2.2" fill="#102A43">Med<tspan fill="#0F8F89">Vision</tspan></text>
+  <text x="188" y="124" font-family="Inter, Manrope, Arial, sans-serif" font-size="15" font-weight="600" letter-spacing="3.2" fill="#64808D">MEDICAL IMAGE INTELLIGENCE</text>
+</svg>
+
