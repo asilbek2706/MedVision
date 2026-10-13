@@ -1,4 +1,4 @@
-﻿export type MedicalImage = {
+export type MedicalImage = {
   id: string;
   originalName: string;
   mimeType: string;
@@ -18,6 +18,7 @@ export type AnalysisOptions = {
 };
 
 export type AnalysisParameters = {
+  name?: string;
   algorithm: "OTSU";
   blurKernelSize: number;
   invert: boolean;
@@ -31,6 +32,7 @@ export type AnalysisStatus =
 
 export type AnalysisResult = {
   id: string;
+  name: string;
   imageId: string;
   algorithm: string;
   parameters: Record<string, unknown>;

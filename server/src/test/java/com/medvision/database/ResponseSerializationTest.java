@@ -56,7 +56,7 @@ class ResponseSerializationTest {
         ));
 
         Analysis analysis = analyses.saveAndFlush(new Analysis(
-                image, "OTSU", Map.of("blurKernelSize", 5)
+                image, "OTSU", "Test tahlil", Map.of("blurKernelSize", 5)
         ));
 
         analysis.complete(privateMaskKey, privateOverlayKey, 2500, 0.25, 120);

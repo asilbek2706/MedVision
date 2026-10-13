@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import type {
   MedicalImage,
@@ -204,5 +204,116 @@ export const segmentationApi = {
   downloadOverlay: (analysisId: string) =>
     getBlob(
       `/api/analyses/${encodeURIComponent(analysisId)}/overlay/download`,
+    ),
+};
+
+export type DashboardStats = {
+  totalImages: number;
+  completedAnalyses: number;
+  failedAnalyses: number;
+};
+
+export type AnalysisStatus = "PROCESSING" | "COMPLETED" | "FAILED";
+
+export type AnalysisHistoryItem = {
+  id: string;
+  name: string;
+  imageId: string;
+  algorithm: string;
+  parameters: Record<string, unknown>;
+  status: AnalysisStatus;
+  foregroundPixels: number | null;
+  foregroundRatio: number | null;
+  processingTimeMs: number | null;
+  errorCode: string | null;
+  createdAt: string;
+  completedAt: string | null;
+};
+
+export type MedicalImageItem = {
+  id: string;
+  originalName: string;
+  mimeType: string;
+  sizeBytes: number;
+  width: number;
+  height: number;
+  createdAt: string;
+};
+
+export type PageResponse<T> = {
+  items: T[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  first: boolean;
+  last: boolean;
+};
+
+export type AnalysisHistoryFilters = {
+  page?: number;
+  size?: number;
+  status?: AnalysisStatus;
+  algorithm?: string;
+  from?: string;
+  to?: string;
+};
+
+export const dashboardApi = {
+  renameAnalysis: async (id: string, name: string) => {
+    const headers = await csrfHeaders();
+    headers.set("Content-Type", "application/json");
+
+    return request<AnalysisHistoryItem>(
+      `/api/analyses/${encodeURIComponent(id)}`,
+      {
+        method: "PATCH",
+        headers,
+        body: JSON.stringify({ name }),
+      }
+    );
+  },
+  stats: () =>
+    request<DashboardStats>("/api/dashboard/stats"),
+
+  recentAnalyses: (size = 5) =>
+    request<PageResponse<AnalysisHistoryItem>>(
+      `/api/analyses?page=0&size=${size}`,
+    ),
+
+  analyses: (filters: AnalysisHistoryFilters = {}) => {
+    const params = new URLSearchParams();
+
+    params.set("page", String(filters.page ?? 0));
+    params.set("size", String(filters.size ?? 20));
+
+    if (filters.status) params.set("status", filters.status);
+    if (filters.algorithm) params.set("algorithm", filters.algorithm);
+    if (filters.from) params.set("from", filters.from);
+    if (filters.to) params.set("to", filters.to);
+
+    return request<PageResponse<AnalysisHistoryItem>>(
+      `/api/analyses?${params.toString()}`,
+    );
+  },
+
+  analysis: (id: string) =>
+    request<AnalysisHistoryItem>(
+      `/api/analyses/${encodeURIComponent(id)}`,
+    ),
+
+  images: (page = 0, size = 20) =>
+    request<PageResponse<MedicalImageItem>>(
+      `/api/images?page=${page}&size=${size}`,
+    ),
+
+  image: (id: string) =>
+    request<MedicalImageItem>(
+      `/api/images/${encodeURIComponent(id)}`,
+    ),
+
+  imageAnalyses: (id: string, page = 0, size = 20) =>
+    request<PageResponse<AnalysisHistoryItem>>(
+      `/api/images/${encodeURIComponent(id)}/analyses?page=${page}&size=${size}`,
     ),
 };

@@ -50,7 +50,7 @@ class AnalysisResultControllerTest {
         Analysis analysis = new Analysis(
                 image,
                 "OTSU",
-                Map.of()
+                "Test tahlil", Map.of()
         );
 
         analysis.complete("mask.png", "overlay.png", 2500, 0.25, 100);
@@ -128,7 +128,7 @@ class AnalysisResultControllerTest {
         Analysis processing = new Analysis(
                 mock(com.medvision.image.MedicalImage.class),
                 "OTSU",
-                Map.of()
+                "Test tahlil", Map.of()
         );
 
         when(analyses.findByIdAndImage_User_Id(analysisId, ownerId))

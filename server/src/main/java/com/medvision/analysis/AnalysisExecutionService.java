@@ -59,6 +59,7 @@ public class AnalysisExecutionService {
             var analysis = new Analysis(
                     image,
                     "OTSU",
+                    request.name(),
                     Map.of(
                             "invert", request.invert(),
                             "blurKernelSize", blur,
@@ -159,6 +160,9 @@ public class AnalysisExecutionService {
 
     private void validate(AnalysisParametersRequest request) {
         if (request == null
+                || request.name() == null
+                || request.name().isBlank()
+                || request.name().trim().length() > 120
                 || !"OTSU".equals(request.algorithm())
                 || request.blurKernelSize() == null
                 || request.invert() == null) {

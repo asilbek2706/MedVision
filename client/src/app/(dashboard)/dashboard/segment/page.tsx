@@ -28,6 +28,7 @@ export default function SegmentPage() {
   const [uploadError, setUploadError] = useState("");
 
   const [parameters, setParameters] = useState<AnalysisParameters>({
+    name: "",
     algorithm: "OTSU",
     blurKernelSize: 3,
     invert: false,
@@ -39,13 +40,23 @@ export default function SegmentPage() {
   async function handleSegment() {
     if (!uploadedImage || segmenting || uploading) return;
 
+    const name = parameters.name?.trim() ?? "";
+
+    if (!name || name.length > 120) {
+      setAnalysisError("Tahlil nomini kiriting (maksimal 120 ta belgi).");
+      return;
+    }
+
     setSegmenting(true);
     setAnalysisError("");
     setAnalysis(null);
 
     try {
       await segmentationApi.validate(parameters);
-      const result = await segmentationApi.execute(uploadedImage.id, parameters);
+      const result = await segmentationApi.execute(uploadedImage.id, {
+        ...parameters,
+        name,
+      });
       setAnalysis(result);
     } catch (err: unknown) {
       if (
@@ -280,7 +291,7 @@ export default function SegmentPage() {
             <button
               type="button"
               onClick={handleSegment}
-              disabled={!uploadedImage || segmenting || uploading}
+              disabled={!uploadedImage || segmenting || uploading || !parameters.name?.trim()}
               className="med-button med-button-primary w-full disabled:opacity-50"
             >
               {segmenting
@@ -303,7 +314,7 @@ export default function SegmentPage() {
             {analysis && (
               <div className="med-card p-6">
                 <h3 className="text-lg font-bold text-[var(--foreground)]">
-                  Segmentatsiya natijasi
+                  {analysis.name || "Segmentatsiya natijasi"}
                 </h3>
                 <p className="mt-3 text-sm text-[var(--muted)]">
                   Status: {analysis.status}
@@ -344,23 +355,15 @@ export default function SegmentPage() {
 
               <div className="mt-5 space-y-4 text-sm">
                 <div className="flex justify-between gap-3">
-                  <span className="text-[var(--muted)]">Algoritm</span>
-                  <span className="font-semibold text-[var(--foreground)]">
-                    {options.plannedAlgorithms.join(", ")}
-                  </span>
-                </div>
-
-                <div className="flex justify-between gap-3">
                   <span className="text-[var(--muted)]">Rasm</span>
                   <span className="max-w-36 truncate text-right font-semibold text-[var(--foreground)]">
                     {selectedFile?.name || "Tanlanmagan"}
                   </span>
                 </div>
-
                 <div className="flex justify-between gap-3">
-                  <span className="text-[var(--muted)]">Maks. o&apos;lcham</span>
-                  <span className="font-semibold text-[var(--foreground)]">
-                    {options.maxWidth} × {options.maxHeight}
+                  <span className="text-[var(--muted)]">Tahlil nomi</span>
+                  <span className="max-w-36 truncate text-right font-semibold text-[var(--foreground)]">
+                    {parameters.name?.trim() || "Kiritilmagan"}
                   </span>
                 </div>
               </div>
@@ -371,8 +374,7 @@ export default function SegmentPage() {
                 Keyingi bosqich
               </h3>
               <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-                Rasm tanlangandan keyin serverga yuklash, OTSU algoritmi va
-                natijalarni ko&apos;rish imkoniyatlarini ulaymiz.
+                Rasmni yuklang, tahlil nomini kiriting va segmentatsiyani boshlang.
               </p>
             </div>
           </aside>

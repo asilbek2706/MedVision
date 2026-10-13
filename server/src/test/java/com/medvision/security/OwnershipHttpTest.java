@@ -200,7 +200,7 @@ class OwnershipHttpTest {
 
     private Analysis fixtureAnalysis(MedicalImage image) {
         Analysis analysis = analyses.saveAndFlush(new Analysis(
-                image, "OTSU", Map.of("blurKernelSize", 5, "invert", false)
+                image, "OTSU", "Test tahlil", Map.of("blurKernelSize", 5, "invert", false)
         ));
         analysisIds.add(analysis.getId());
         return analysis;

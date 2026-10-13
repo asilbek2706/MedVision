@@ -4,10 +4,10 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ThemeSwitcher } from "@/components/ui/ThemeSwitcher";
+import { DashboardOverview } from "@/components/dashboard/DashboardOverview";
 import { MedVisionLogo } from "@/components/ui/MedVisionLogo";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { ErrorState } from "@/components/ui/ErrorState";
-import { EmptyState } from "@/components/ui/EmptyState";
 import {
   authApi,
   ApiRequestError,
@@ -184,17 +184,11 @@ export default function DashboardPage() {
       className="med-button med-button-primary shrink-0"
     >
       Tahlilni boshlash
-      <span aria-hidden="true">→</span>
     </Link>
   </div>
 </div>
 
-<div className="mt-8">
-            <EmptyState
-              title="Hozircha tahlillar mavjud emas"
-              description="Tibbiy tasvirlar bilan ishlash bo'limi keyingi bosqichda ulanadi."
-            />
-          </div>
+<DashboardOverview />
 
           {error && (
             <div className="mt-6">

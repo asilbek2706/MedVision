@@ -84,7 +84,7 @@ class ImageStorageIntegrationTest {
         var response = files.upload(owner.getId(), image("png"));
         var stored = track(response.id());
 
-        analyses.saveAndFlush(new Analysis(stored, "OTSU", Map.of()));
+        analyses.saveAndFlush(new Analysis(stored, "OTSU", "Test tahlil", Map.of()));
 
         ApiException error = assertThrows(
                 ApiException.class,

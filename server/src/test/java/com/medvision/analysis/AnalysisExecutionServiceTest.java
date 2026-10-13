@@ -96,7 +96,7 @@ class AnalysisExecutionServiceTest {
     }
 
     private AnalysisParametersRequest parameters() {
-        return new AnalysisParametersRequest("OTSU", 5, false);
+        return new AnalysisParametersRequest("Test tahlil", "OTSU", 5, false);
     }
 
     private long fileCount() throws Exception {
