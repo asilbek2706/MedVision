@@ -55,3 +55,9 @@ Spring Boot .env faylini avtomatik o‘qimaydi.
 Production audit: 0 vulnerabilities.
 ESLint development zanjirida braces@3.0.3 muammosi ochiq.
 Advisory: GHSA-vfj7-8cjw-p6xm.
+## Test database setup
+Yangi muhitda testlardan oldin:
+    .\scripts\setup-test-db.ps1
+
+Context va database testlari test profilidagi medvision_test bilan ishlaydi.
+Database testlari transaction rollback orqali namunaviy yozuvlarni tozalaydi.
