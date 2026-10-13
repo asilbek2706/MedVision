@@ -1,0 +1,390 @@
+@baseUrl = http://localhost:18080
+@testPassword = MedVisionTest2026!
+
+### 01 Get CSRF and generate test email
+GET {{baseUrl}}/api/auth/csrf
+Accept: application/json
+
+> {%
+    client.test("CSRF available", function () {
+        client.assert(response.status === 200, "Expected 200");
+    });
+    if (response.status === 200) {
+        client.global.set("segCsrf", response.body.token);
+        client.global.set(
+            "segEmail",
+            "seg-" + Date.now() + "@example.test"
+        );
+    }
+%}
+
+### 02 Register segmentation test user
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+Accept: application/json
+X-CSRF-TOKEN: {{segCsrf}}
+
+{
+  "name": "Segmentation Test",
+  "email": "{{segEmail}}",
+  "password": "{{testPassword}}"
+}
+
+> {%
+    client.test("Registration succeeds", function () {
+        client.assert(response.status === 201, "Expected 201");
+    });
+%}
+
+### 03 Login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+Accept: application/json
+X-CSRF-TOKEN: {{segCsrf}}
+
+{
+  "email": "{{segEmail}}",
+  "password": "{{testPassword}}"
+}
+
+> {%
+    client.test("Login succeeds", function () {
+        client.assert(response.status === 200, "Expected 200");
+    });
+%}
+
+### 04 Refresh CSRF after login
+GET {{baseUrl}}/api/auth/csrf
+Accept: application/json
+
+> {%
+    client.test("Fresh CSRF", function () {
+        client.assert(response.status === 200, "Expected 200");
+    });
+    if (response.status === 200) {
+        client.global.set("segCsrf", response.body.token);
+    }
+%}
+
+### 05 Upload test PNG
+POST {{baseUrl}}/api/images
+Content-Type: multipart/form-data; boundary=MedVisionBoundary
+Accept: application/json
+X-CSRF-TOKEN: {{segCsrf}}
+
+--MedVisionBoundary
+Content-Disposition: form-data; name="file"; filename="valid.png"
+Content-Type: image/png
+
+< ./fixtures/valid.png
+--MedVisionBoundary--
+
+> {%
+    client.test("PNG upload succeeds", function () {
+        client.assert(response.status === 201, "Expected 201");
+    });
+    if (response.status === 201) {
+        client.global.set("segImageId", response.body.id);
+    }
+%}
+
+### 06 Execute OTSU segmentation
+POST {{baseUrl}}/api/images/{{segImageId}}/analyses
+Content-Type: application/json
+Accept: application/json
+X-CSRF-TOKEN: {{segCsrf}}
+
+{
+  "algorithm": "OTSU",
+  "blurKernelSize": 5,
+  "invert": false
+}
+
+> {%
+    client.test("Segmentation succeeds", function () {
+        client.assert(response.status === 201, "Expected 201");
+    });
+    if (response.status === 201) {
+        client.assert(
+            response.body.status === "COMPLETED",
+            "Analysis not completed"
+        );
+        client.assert(
+            response.body.foregroundRatio >= 0 &&
+            response.body.foregroundRatio <= 1,
+            "Invalid foreground ratio"
+        );
+        client.assert(
+            !("maskKey" in response.body),
+            "Storage key exposed"
+        );
+        client.global.set("segAnalysisId", response.body.id);
+    }
+%}
+
+### 07 Get analysis detail
+GET {{baseUrl}}/api/analyses/{{segAnalysisId}}
+Accept: application/json
+
+> {%
+    client.test("Analysis detail available", function () {
+        client.assert(response.status === 200, "Expected 200");
+        client.assert(
+            response.body.status === "COMPLETED",
+            "Expected COMPLETED"
+        );
+    });
+%}
+
+### 08 Download binary mask
+GET {{baseUrl}}/api/analyses/{{segAnalysisId}}/mask
+Accept: image/png
+
+> {%
+    client.test("Mask PNG available", function () {
+        client.assert(response.status === 200, "Expected 200");
+        client.assert(
+            (response.headers.valueOf("Content-Type") || "")
+                .includes("image/png"),
+            "Expected PNG"
+        );
+    });
+%}
+
+### 09 Download overlay
+GET {{baseUrl}}/api/analyses/{{segAnalysisId}}/overlay
+Accept: image/png
+
+> {%
+    client.test("Overlay PNG available", function () {
+        client.assert(response.status === 200, "Expected 200");
+        client.assert(
+            (response.headers.valueOf("Content-Type") || "")
+                .includes("image/png"),
+            "Expected PNG"
+        );
+    });
+%}
+
+### 10 Invalid blur kernel rejected
+POST {{baseUrl}}/api/images/{{segImageId}}/analyses
+Content-Type: application/json
+Accept: application/json
+X-CSRF-TOKEN: {{segCsrf}}
+
+{
+  "algorithm": "OTSU",
+  "blurKernelSize": 4,
+  "invert": false
+}
+
+> {%
+    client.test("Even blur kernel rejected", function () {
+        client.assert(response.status === 400, "Expected 400");
+        client.assert(
+            response.body.code === "INVALID_BLUR_KERNEL",
+            "Wrong error code"
+        );
+    });
+%}
+### 11 Register another user
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+Accept: application/json
+X-CSRF-TOKEN: {{segCsrf}}
+
+{
+  "name": "Segmentation User B",
+  "email": "seg-b-{{segEmail}}",
+  "password": "{{testPassword}}"
+}
+
+> {%
+    client.test("User B registered", function () {
+        client.assert(response.status === 201, "Expected 201");
+    });
+%}
+
+### 12 Login as User B
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+Accept: application/json
+X-CSRF-TOKEN: {{segCsrf}}
+
+{
+  "email": "seg-b-{{segEmail}}",
+  "password": "{{testPassword}}"
+}
+
+> {%
+    client.test("User B logged in", function () {
+        client.assert(response.status === 200, "Expected 200");
+    });
+%}
+
+### 13 Refresh User B CSRF
+GET {{baseUrl}}/api/auth/csrf
+Accept: application/json
+
+> {%
+    if (response.status === 200) {
+        client.global.set("segCsrf", response.body.token);
+    }
+%}
+
+### 14 User B cannot read User A analysis
+GET {{baseUrl}}/api/analyses/{{segAnalysisId}}
+Accept: application/json
+
+> {%
+    client.test("Analysis ownership enforced", function () {
+        client.assert(response.status === 404, "Expected 404");
+    });
+%}
+
+### 15 User B cannot read User A mask
+GET {{baseUrl}}/api/analyses/{{segAnalysisId}}/mask
+Accept: application/json
+
+> {%
+    client.test("Mask ownership enforced", function () {
+        client.assert(response.status === 404, "Expected 404");
+    });
+%}
+
+### 16 User B cannot read User A overlay
+GET {{baseUrl}}/api/analyses/{{segAnalysisId}}/overlay
+Accept: application/json
+
+> {%
+    client.test("Overlay ownership enforced", function () {
+        client.assert(response.status === 404, "Expected 404");
+    });
+%}
+
+### 17 User B cannot analyze User A image
+POST {{baseUrl}}/api/images/{{segImageId}}/analyses
+Content-Type: application/json
+Accept: application/json
+X-CSRF-TOKEN: {{segCsrf}}
+
+{
+  "algorithm": "OTSU",
+  "blurKernelSize": 5,
+  "invert": false
+}
+
+> {%
+    client.test("Execution ownership enforced", function () {
+        client.assert(response.status === 404, "Expected 404");
+    });
+%}
+
+### 18 Phase 7 — Login as User A again
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+Accept: application/json
+X-CSRF-TOKEN: {{segCsrf}}
+
+{
+  "email": "{{segEmail}}",
+  "password": "{{testPassword}}"
+}
+
+> {%
+    client.test("Owner A login", function () {
+        client.assert(response.status === 200, "Expected 200, got " + response.status);
+    });
+%}
+
+### 19 Phase 7 — Owner analysis history
+GET {{baseUrl}}/api/analyses?page=0&size=10
+Accept: application/json
+
+> {%
+    client.test("Owner analysis history", function () {
+        client.assert(response.status === 200, "Expected 200, got " + response.status);
+        if (response.status === 200) {
+            client.assert(
+                response.body.items.some(item => item.id === client.global.get("segAnalysisId")),
+                "Created analysis missing from history"
+            );
+        }
+    });
+%}
+
+### 20 Phase 7 — Image analysis history
+GET {{baseUrl}}/api/images/{{segImageId}}/analyses?page=0&size=10
+Accept: application/json
+
+> {%
+    client.test("Image analysis history", function () {
+        client.assert(response.status === 200, "Expected 200, got " + response.status);
+        if (response.status === 200) {
+            client.assert(
+                response.body.items.some(item => item.id === client.global.get("segAnalysisId")),
+                "Image analysis missing"
+            );
+        }
+    });
+%}
+
+### 21 Phase 7 — Download mask
+GET {{baseUrl}}/api/analyses/{{segAnalysisId}}/mask/download
+Accept: image/png
+
+> {%
+    client.test("Mask attachment download", function () {
+        client.assert(response.status === 200, "Expected 200, got " + response.status);
+        client.assert(
+            (response.headers.valueOf("Content-Type") || "").includes("image/png"),
+            "Expected image/png"
+        );
+        client.assert(
+            (response.headers.valueOf("Content-Disposition") || "").includes("attachment"),
+            "Expected attachment"
+        );
+        client.assert(
+            (response.headers.valueOf("Cache-Control") || "").includes("no-store"),
+            "Expected no-store"
+        );
+    });
+%}
+
+### 22 Phase 7 — Download overlay
+GET {{baseUrl}}/api/analyses/{{segAnalysisId}}/overlay/download
+Accept: image/png
+
+> {%
+    client.test("Overlay attachment download", function () {
+        client.assert(response.status === 200, "Expected 200, got " + response.status);
+        client.assert(
+            (response.headers.valueOf("Content-Disposition") || "").includes("attachment"),
+            "Expected attachment"
+        );
+        client.assert(
+            (response.headers.valueOf("Content-Type") || "").includes("image/png"),
+            "Expected image/png"
+        );
+    });
+%}
+
+### 23 Phase 7 — Invalid pagination
+GET {{baseUrl}}/api/analyses?page=-1&size=10
+Accept: application/json
+
+> {%
+    client.test("Invalid pagination rejected", function () {
+        client.assert(response.status === 400, "Expected 400, got " + response.status);
+    });
+%}
+
+### 24 Phase 7 — Unknown analysis download
+GET {{baseUrl}}/api/analyses/00000000-0000-0000-0000-000000000000/mask/download
+Accept: application/json
+
+> {%
+    client.test("Unknown analysis rejected", function () {
+        client.assert(response.status === 404, "Expected 404, got " + response.status);
+    });
+%}

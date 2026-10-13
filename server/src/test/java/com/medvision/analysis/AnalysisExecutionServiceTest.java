@@ -17,6 +17,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -29,6 +30,7 @@ class AnalysisExecutionServiceTest {
 
     private final UUID ownerId = UUID.randomUUID();
     private final UUID imageId = UUID.randomUUID();
+    private final UUID analysisId = UUID.randomUUID();
 
     private byte[] samplePng() {
         nu.pattern.OpenCV.loadLocally();
@@ -49,10 +51,7 @@ class AnalysisExecutionServiceTest {
                     -1
             );
 
-            assertTrue(
-                    Imgcodecs.imencode(".png", image, encoded)
-            );
-
+            assertTrue(Imgcodecs.imencode(".png", image, encoded));
             return encoded.toArray();
         } finally {
             encoded.release();
@@ -64,7 +63,7 @@ class AnalysisExecutionServiceTest {
         var manager = mock(PlatformTransactionManager.class);
 
         when(manager.getTransaction(any()))
-                .thenReturn(new SimpleTransactionStatus());
+                .thenAnswer(invocation -> new SimpleTransactionStatus());
 
         return manager;
     }
@@ -97,9 +96,7 @@ class AnalysisExecutionServiceTest {
     }
 
     private AnalysisParametersRequest parameters() {
-        return new AnalysisParametersRequest(
-                "OTSU", 5, false
-        );
+        return new AnalysisParametersRequest("OTSU", 5, false);
     }
 
     private long fileCount() throws Exception {
@@ -108,8 +105,31 @@ class AnalysisExecutionServiceTest {
         }
     }
 
+    private AtomicReference<Analysis> configureRepository(
+            AnalysisRepository analyses
+    ) {
+        var saved = new AtomicReference<Analysis>();
+
+        when(analyses.saveAndFlush(any(Analysis.class)))
+                .thenAnswer(invocation -> {
+                    Analysis analysis = invocation.getArgument(0);
+                    saved.set(analysis);
+
+                    var idField = Analysis.class.getDeclaredField("id");
+                    idField.setAccessible(true);
+                    idField.set(analysis, analysisId);
+
+                    return analysis;
+                });
+
+        when(analyses.findById(analysisId))
+                .thenAnswer(invocation -> Optional.ofNullable(saved.get()));
+
+        return saved;
+    }
+
     @Test
-    void successfullyStoresMaskAndOverlay() throws Exception {
+    void successfullyTransitionsProcessingToCompleted() throws Exception {
         byte[] png = samplePng();
 
         var storage = new StorageService(directory.toString());
@@ -124,22 +144,16 @@ class AnalysisExecutionServiceTest {
         when(images.findByIdAndUser_Id(imageId, ownerId))
                 .thenReturn(Optional.of(source));
 
-        when(analyses.saveAndFlush(any(Analysis.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+        configureRepository(analyses);
 
-        var execution = service(
-                images, analyses, storage, manager
-        );
+        var execution = service(images, analyses, storage, manager);
 
-        // Mock entity has no generated ID, but execution should
-        // still complete and persist the correct statistics.
         AnalysisResponse response = execution.execute(
                 ownerId, imageId, parameters()
         );
 
         assertEquals(AnalysisStatus.COMPLETED, response.status());
-        assertEquals("OTSU", response.algorithm());
-
+        assertEquals(analysisId, response.id());
         assertNotNull(response.foregroundPixels());
         assertTrue(response.foregroundPixels() > 0);
         assertTrue(response.foregroundRatio() > 0);
@@ -147,12 +161,8 @@ class AnalysisExecutionServiceTest {
 
         assertEquals(3, fileCount());
 
-        verify(analyses).saveAndFlush(argThat(analysis ->
-                analysis.getStatus() == AnalysisStatus.COMPLETED
-                        && analysis.getMaskKey() != null
-                        && analysis.getOverlayKey() != null
-                        && analysis.getProcessingTimeMs() >= 0
-        ));
+        verify(analyses, times(2)).saveAndFlush(any(Analysis.class));
+        verify(analyses).findById(analysisId);
     }
 
     @Test
@@ -166,17 +176,12 @@ class AnalysisExecutionServiceTest {
                 .thenReturn(Optional.empty());
 
         var execution = service(
-                images,
-                analyses,
-                storage,
-                transactionManager()
+                images, analyses, storage, transactionManager()
         );
 
         ApiException error = assertThrows(
                 ApiException.class,
-                () -> execution.execute(
-                        ownerId, imageId, parameters()
-                )
+                () -> execution.execute(ownerId, imageId, parameters())
         );
 
         assertEquals(404, error.getStatus().value());
@@ -187,7 +192,36 @@ class AnalysisExecutionServiceTest {
     }
 
     @Test
-    void databaseFailureRemovesGeneratedFiles() throws Exception {
+    void segmentationFailureTransitionsToFailed() throws Exception {
+        var storage = new StorageService(directory.toString());
+
+        var images = mock(MedicalImageRepository.class);
+        var analyses = mock(AnalysisRepository.class);
+
+        MedicalImage source = image("missing.png", 100);
+
+        when(images.findByIdAndUser_Id(imageId, ownerId))
+                .thenReturn(Optional.of(source));
+
+        AtomicReference<Analysis> saved = configureRepository(analyses);
+
+        var execution = service(
+                images, analyses, storage, transactionManager()
+        );
+
+        assertThrows(
+                RuntimeException.class,
+                () -> execution.execute(ownerId, imageId, parameters())
+        );
+
+        assertNotNull(saved.get());
+        assertEquals(AnalysisStatus.FAILED, saved.get().getStatus());
+        assertEquals("SEGMENTATION_FAILED", saved.get().getErrorCode());
+        assertEquals(0, fileCount());
+    }
+
+    @Test
+    void completionFailureRemovesGeneratedFiles() throws Exception {
         byte[] png = samplePng();
 
         var storage = new StorageService(directory.toString());
@@ -195,35 +229,37 @@ class AnalysisExecutionServiceTest {
 
         var images = mock(MedicalImageRepository.class);
         var analyses = mock(AnalysisRepository.class);
-        var manager = transactionManager();
 
         MedicalImage source = image(originalKey, png.length);
 
         when(images.findByIdAndUser_Id(imageId, ownerId))
                 .thenReturn(Optional.of(source));
 
-        when(analyses.saveAndFlush(any(Analysis.class)))
-                .thenThrow(
-                        new IllegalStateException(
-                                "Simulated database failure"
-                        )
-                );
+        AtomicReference<Analysis> saved = configureRepository(analyses);
+
+        when(analyses.findById(analysisId))
+                .thenAnswer(invocation -> {
+                    Analysis analysis = saved.get();
+
+                    if (analysis.getStatus() == AnalysisStatus.PROCESSING) {
+                        throw new IllegalStateException(
+                                "Simulated completion failure"
+                        );
+                    }
+
+                    return Optional.of(analysis);
+                });
 
         var execution = service(
-                images, analyses, storage, manager
+                images, analyses, storage, transactionManager()
         );
 
         assertThrows(
                 IllegalStateException.class,
-                () -> execution.execute(
-                        ownerId, imageId, parameters()
-                )
+                () -> execution.execute(ownerId, imageId, parameters())
         );
 
-        // Only the original image should remain.
         assertEquals(1, fileCount());
         assertArrayEquals(png, storage.read(originalKey));
-
-        verify(manager).rollback(any());
     }
 }

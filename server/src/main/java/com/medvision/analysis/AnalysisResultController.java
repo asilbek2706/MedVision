@@ -28,7 +28,7 @@ public class AnalysisResultController {
             Authentication authentication,
             @PathVariable UUID id
     ) {
-        return getResult(authentication, id, true);
+        return getResult(authentication, id, true, false);
     }
 
     @GetMapping("/{id}/overlay")
@@ -36,17 +36,32 @@ public class AnalysisResultController {
             Authentication authentication,
             @PathVariable UUID id
     ) {
-        return getResult(authentication, id, false);
+        return getResult(authentication, id, false, false);
+    }
+
+    @GetMapping("/{id}/mask/download")
+    public ResponseEntity<byte[]> downloadMask(
+            Authentication authentication,
+            @PathVariable UUID id
+    ) {
+        return getResult(authentication, id, true, true);
+    }
+
+    @GetMapping("/{id}/overlay/download")
+    public ResponseEntity<byte[]> downloadOverlay(
+            Authentication authentication,
+            @PathVariable UUID id
+    ) {
+        return getResult(authentication, id, false, true);
     }
 
     private ResponseEntity<byte[]> getResult(
             Authentication authentication,
             UUID id,
-            boolean mask
+            boolean mask,
+            boolean download
     ) {
-        UUID ownerId = UUID.fromString(
-                authentication.getName()
-        );
+        UUID ownerId = UUID.fromString(authentication.getName());
 
         Analysis analysis = analyses
                 .findByIdAndImage_User_Id(id, ownerId)
@@ -70,11 +85,24 @@ public class AnalysisResultController {
 
         byte[] bytes = storage.read(key);
 
-        return ResponseEntity.ok()
+        ResponseEntity.BodyBuilder response = ResponseEntity.ok()
                 .contentType(MediaType.IMAGE_PNG)
                 .contentLength(bytes.length)
                 .cacheControl(CacheControl.noStore())
-                .header("X-Content-Type-Options", "nosniff")
-                .body(bytes);
+                .header("X-Content-Type-Options", "nosniff");
+
+        if (download) {
+            String filename = id + (mask ? "-mask.png" : "-overlay.png");
+
+            response.header(
+                    HttpHeaders.CONTENT_DISPOSITION,
+                    ContentDisposition.attachment()
+                            .filename(filename)
+                            .build()
+                            .toString()
+            );
+        }
+
+        return response.body(bytes);
     }
 }
