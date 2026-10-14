@@ -3,6 +3,7 @@ package com.medvision.analysis;
 import com.medvision.common.error.ApiException;
 import com.medvision.image.MedicalImageRepository;
 import com.medvision.segmentation.SegmentationService;
+import com.medvision.segmentation.algorithms.AlgorithmParameters;
 import com.medvision.storage.StorageService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -44,6 +45,29 @@ public class AnalysisExecutionService {
 
         int blur = request.blurKernelSize();
 
+        AlgorithmParameters algorithmParameters =
+                switch (request.algorithm()) {
+                    case "OTSU" ->
+                            AlgorithmParameters.otsu(request.invert());
+
+                    case "MANUAL" ->
+                            AlgorithmParameters.manual(
+                                    request.invert(),
+                                    request.threshold()
+                            );
+
+                    case "ADAPTIVE" ->
+                            AlgorithmParameters.adaptive(
+                                    request.invert(),
+                                    request.blockSize(),
+                                    request.c()
+                            );
+
+                    default -> throw new IllegalStateException(
+                            "Unexpected algorithm."
+                    );
+                };
+
         var options = new SegmentationService.Options(
                 request.invert(), blur, 3, 50
         );
@@ -58,14 +82,9 @@ public class AnalysisExecutionService {
 
             var analysis = new Analysis(
                     image,
-                    "OTSU",
+                    request.algorithm(),
                     request.name(),
-                    Map.of(
-                            "invert", request.invert(),
-                            "blurKernelSize", blur,
-                            "morphologySize", 3,
-                            "minArea", 50
-                    )
+                    buildStoredParameters(request, blur)
             );
 
             return analyses.saveAndFlush(analysis).getId();
@@ -100,7 +119,12 @@ public class AnalysisExecutionService {
                 throw new IllegalStateException("Source size mismatch.");
             }
 
-            var result = segmentation.segment(input, options);
+            var result = segmentation.segment(
+                    input,
+                    options,
+                    request.algorithm(),
+                    algorithmParameters
+            );
 
             maskKey = storage.store(result.maskPng(), "png");
             overlayKey = storage.store(result.overlayPng(), "png");
@@ -158,12 +182,40 @@ public class AnalysisExecutionService {
         }
     }
 
+    private Map<String, Object> buildStoredParameters(
+            AnalysisParametersRequest request,
+            int blur
+    ) {
+        Map<String, Object> parameters =
+                new java.util.LinkedHashMap<>();
+
+        parameters.put("invert", request.invert());
+        parameters.put("blurKernelSize", blur);
+        parameters.put("morphologySize", 3);
+        parameters.put("minArea", 50);
+
+        switch (request.algorithm()) {
+            case "MANUAL" ->
+                    parameters.put("threshold", request.threshold());
+
+            case "ADAPTIVE" -> {
+                parameters.put("blockSize", request.blockSize());
+                parameters.put("c", request.c());
+            }
+
+            default -> {
+                // OTSU needs no additional parameters.
+            }
+        }
+
+        return parameters;
+    }
     private void validate(AnalysisParametersRequest request) {
         if (request == null
                 || request.name() == null
                 || request.name().isBlank()
                 || request.name().trim().length() > 120
-                || !"OTSU".equals(request.algorithm())
+                || request.algorithm() == null
                 || request.blurKernelSize() == null
                 || request.invert() == null) {
             throw new ApiException(
@@ -182,8 +234,58 @@ public class AnalysisExecutionService {
                     "Blur kernel must be odd and between 1 and 15."
             );
         }
+
+        switch (request.algorithm()) {
+            case "OTSU" -> {
+                if (request.threshold() != null
+                        || request.blockSize() != null
+                        || request.c() != null) {
+                    invalidAlgorithmParameters();
+                }
+            }
+
+            case "MANUAL" -> {
+                if (request.threshold() == null
+                        || request.threshold() < 0
+                        || request.threshold() > 255
+                        || request.blockSize() != null
+                        || request.c() != null) {
+                    invalidAlgorithmParameters();
+                }
+            }
+
+            case "ADAPTIVE" -> {
+                Integer blockSize = request.blockSize();
+                Double c = request.c();
+
+                if (request.threshold() != null
+                        || blockSize == null
+                        || blockSize < 3
+                        || blockSize > 31
+                        || blockSize % 2 == 0
+                        || c == null
+                        || !Double.isFinite(c)
+                        || c < -50
+                        || c > 50) {
+                    invalidAlgorithmParameters();
+                }
+            }
+
+            default -> throw new ApiException(
+                    HttpStatus.BAD_REQUEST,
+                    "INVALID_ALGORITHM",
+                    "Unsupported segmentation algorithm."
+            );
+        }
     }
 
+    private void invalidAlgorithmParameters() {
+        throw new ApiException(
+                HttpStatus.BAD_REQUEST,
+                "INVALID_ALGORITHM_PARAMETERS",
+                "Invalid parameters for selected algorithm."
+        );
+    }
     private void cleanup(String key, RuntimeException original) {
         if (key == null) {
             return;
