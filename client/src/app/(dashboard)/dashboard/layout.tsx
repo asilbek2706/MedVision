@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -24,7 +24,7 @@ const navigation = [
   { label: "Analysis History", href: "/dashboard/history", icon: Clock3 },
 ];
 
-export default function DashboardLayout({
+function DashboardLayoutContent({
   children,
 }: {
   children: React.ReactNode;
@@ -109,7 +109,7 @@ export default function DashboardLayout({
       return (
         <main className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[var(--background)] px-6 text-center">
           <h1 className="text-xl font-bold text-[var(--foreground)]">
-            Sessiyani tekshirib bo'lmadi
+            Sessiyani tekshirib bo&apos;lmadi
           </h1>
           <p className="max-w-md text-sm text-[var(--muted)]">
             {authError}
@@ -273,5 +273,22 @@ export default function DashboardLayout({
         {children}
       </div>
     </div>
+  );
+}
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <Suspense
+      fallback={
+        <main className="flex min-h-screen items-center justify-center bg-[var(--background)]">
+          <div className="size-10 animate-spin rounded-full border-4 border-teal-500/20 border-t-teal-500" />
+        </main>
+      }
+    >
+      <DashboardLayoutContent>{children}</DashboardLayoutContent>
+    </Suspense>
   );
 }

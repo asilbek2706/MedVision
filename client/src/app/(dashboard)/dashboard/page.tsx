@@ -116,7 +116,7 @@ export default function DashboardPage() {
           />
           <div className="mt-5 text-center">
             <Link href="/login" className="text-sm font-semibold text-[var(--primary)] hover:underline">
-              Kirish sahifasiga o'tish
+              Kirish sahifasiga o&apos;tish
             </Link>
           </div>
         </div>
@@ -185,7 +185,7 @@ export default function DashboardPage() {
                 </div>
                 <div>
                   <p className="font-bold text-[var(--foreground)]">Analysis History</p>
-                  <p className="mt-1 text-sm text-[var(--muted)]">Oldingi natijalarni ko'rish</p>
+                  <p className="mt-1 text-sm text-[var(--muted)]">Oldingi natijalarni ko&apos;rish</p>
                 </div>
               </div>
               <ArrowRight size={19} className="text-[var(--muted)] transition-transform group-hover:translate-x-1" />
