@@ -51,8 +51,8 @@ export default function NotFound() {
         </h1>
 
         <p className="mt-5 max-w-xl text-base leading-8 text-[var(--muted)] sm:text-lg">
-          Siz izlayotgan sahifa mavjud emas, ko'chirilgan yoki
-          manzili noto'g'ri kiritilgan bo'lishi mumkin.
+          Siz izlayotgan sahifa mavjud emas, ko&apos;chirilgan yoki
+          manzili noto&apos;g&apos;ri kiritilgan bo&apos;lishi mumkin.
         </p>
 
         <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
@@ -61,7 +61,7 @@ export default function NotFound() {
             className="inline-flex min-h-12 items-center justify-center gap-3 rounded-2xl bg-teal-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-teal-900/15 transition-all hover:-translate-y-0.5 hover:bg-teal-700"
           >
             <Home size={18} />
-            Dashboardga o'tish
+            Dashboardga o&apos;tish
             <ArrowRight size={17} />
           </Link>
 
@@ -104,7 +104,7 @@ export default function NotFound() {
             <div className="min-w-0">
               <p className="font-bold">Analysis History</p>
               <p className="mt-1 text-xs text-[var(--muted)]">
-                Tahlillarni ko'rish
+                Tahlillarni ko&apos;rish
               </p>
             </div>
             <ArrowRight
