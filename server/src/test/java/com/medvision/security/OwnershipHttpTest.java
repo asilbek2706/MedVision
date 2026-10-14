@@ -273,6 +273,65 @@ class OwnershipHttpTest {
         );
     }
 
+    @Test
+    void foreignUserCannotAccessMaskOrOverlay() throws Exception {
+        Browser ownerBrowser = new Browser();
+        Browser foreignBrowser = new Browser();
+
+        String ownerEmail = UUID.randomUUID() + "@example.test";
+        String foreignEmail = UUID.randomUUID() + "@example.test";
+
+        String ownerCsrf = csrf(ownerBrowser);
+        String foreignCsrf = csrf(foreignBrowser);
+
+        UserResponse owner = register(
+                ownerBrowser, ownerEmail, ownerCsrf
+        );
+
+        register(foreignBrowser, foreignEmail, foreignCsrf);
+
+        assertEquals(200, post(
+                ownerBrowser,
+                "/api/auth/login",
+                Map.of("email", ownerEmail, "password", PASSWORD),
+                ownerCsrf
+        ).statusCode());
+
+        assertEquals(200, post(
+                foreignBrowser,
+                "/api/auth/login",
+                Map.of("email", foreignEmail, "password", PASSWORD),
+                foreignCsrf
+        ).statusCode());
+
+        MedicalImage image = fixtureImage(
+                owner.id(), "protected-result.png"
+        );
+
+        Analysis analysis = fixtureAnalysis(image);
+
+        String base = "/api/analyses/" + analysis.getId();
+
+        for (String suffix : List.of(
+                "/mask",
+                "/overlay",
+                "/mask/download",
+                "/overlay/download"
+        )) {
+            var response = get(foreignBrowser, base + suffix);
+
+            assertNotFound(response);
+            assertFalse(
+                    response.body().contains("storageKey")
+            );
+            assertFalse(
+                    response.body().contains("maskKey")
+            );
+            assertFalse(
+                    response.body().contains("overlayKey")
+            );
+        }
+    }
     private byte[] createValidPng() throws Exception {
         var image = new java.awt.image.BufferedImage(
                 10,
