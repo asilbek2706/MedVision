@@ -14,6 +14,9 @@ public record AnalysisResponse(
         Long foregroundPixels,
         Double foregroundRatio,
         Long processingTimeMs,
+        Double diceScore,
+        Double iouScore,
+        Boolean hasGroundTruth,
         String errorCode,
         Instant createdAt,
         Instant completedAt
@@ -29,6 +32,9 @@ public record AnalysisResponse(
                 analysis.getForegroundPixels(),
                 analysis.getForegroundRatio(),
                 analysis.getProcessingTimeMs(),
+                analysis.getDiceScore(),
+                analysis.getIouScore(),
+                analysis.getGroundTruthKey() != null,
                 analysis.getErrorCode(),
                 analysis.getCreatedAt(),
                 analysis.getCompletedAt()
