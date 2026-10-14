@@ -28,7 +28,7 @@ export function HistoryThumbnail({ imageId }: { imageId: string }) {
   }, [imageId]);
 
   return (
-    <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+    <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[(--border)] bg-[(--surface)]">
       {url ? (
         // Authenticated image is loaded as an object URL.
         // eslint-disable-next-line @next/next/no-img-element
@@ -38,7 +38,7 @@ export function HistoryThumbnail({ imageId }: { imageId: string }) {
           className="h-full w-full object-cover"
         />
       ) : (
-        <ImageIcon size={24} className="text-[var(--muted)]" />
+        <ImageIcon size={24} className="text-[(--muted)]" />
       )}
     </div>
   );

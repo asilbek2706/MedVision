@@ -4,10 +4,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AnalysisRenameButton } from "@/components/dashboard/AnalysisRenameButton";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Clock3, ScanLine } from "lucide-react";
+import {  Clock3, ScanLine } from "lucide-react";
 
-import { MedVisionLogo } from "@/components/ui/MedVisionLogo";
-import { ThemeSwitcher } from "@/components/ui/ThemeSwitcher";
+
 import { LoadingState } from "@/components/ui/LoadingState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { AnalysisVisualization } from "@/components/segmentation/AnalysisVisualization";
@@ -86,7 +85,7 @@ export default function AnalysisDetailPage() {
 
   if (!analysis || !image) {
     return (
-      <main className="min-h-screen bg-[var(--background)] px-4 py-10">
+      <main className="min-h-screen bg-[(--background)] px-4 py-10">
         <div className="mx-auto max-w-xl">
           <ErrorState
             title="Tahlil topilmadi"
@@ -99,7 +98,7 @@ export default function AnalysisDetailPage() {
           />
           <Link
             href="/dashboard/history"
-            className="mt-5 inline-block text-sm font-semibold text-[var(--primary)]"
+            className="mt-5 inline-block text-sm font-semibold text-[(--primary)]"
           >
             Tarixga qaytish
           </Link>
@@ -111,18 +110,7 @@ export default function AnalysisDetailPage() {
   return (
     <main className="min-h-screen bg-[var(--background)] px-4 py-8 sm:px-8">
       <div className="mx-auto max-w-6xl">
-        <header className="mb-8 flex items-center justify-between gap-4">
-          <MedVisionLogo href="/dashboard" size="header" />
-          <ThemeSwitcher />
-        </header>
 
-        <Link
-          href="/dashboard/history"
-          className="mb-7 inline-flex items-center gap-2 text-sm font-semibold text-[var(--muted)] hover:text-[var(--primary)]"
-        >
-          <ArrowLeft size={16} />
-          Tahlillar tarixiga qaytish
-        </Link>
 
         <section className="med-card p-6 sm:p-8">
           <div className="flex flex-wrap items-start justify-between gap-4">

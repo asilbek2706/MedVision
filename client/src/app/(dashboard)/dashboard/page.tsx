@@ -3,6 +3,18 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import {
+  Activity,
+  ArrowRight,
+  ChevronRight,
+  Clock3,
+  LayoutDashboard,
+  LogOut,
+  ScanLine,
+  ShieldCheck,
+  Sparkles,
+  UserRound,
+} from "lucide-react";
 import { ThemeSwitcher } from "@/components/ui/ThemeSwitcher";
 import { DashboardOverview } from "@/components/dashboard/DashboardOverview";
 import { MedVisionLogo } from "@/components/ui/MedVisionLogo";
@@ -14,10 +26,14 @@ import {
   type CurrentUser,
 } from "@/lib/api";
 
+const navigation = [
+  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, active: true },
+  { label: "Segmentatsiya", href: "/dashboard/segment", icon: ScanLine, active: false },
+  { label: "Tahlillar tarixi", href: "/dashboard/history", icon: Clock3, active: false },
+];
 
 export default function DashboardPage() {
   const router = useRouter();
-
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -27,8 +43,7 @@ export default function DashboardPage() {
   useEffect(() => {
     let active = true;
 
-    authApi
-      .me()
+    authApi.me()
       .then((currentUser) => {
         if (active) setUser(currentUser);
       })
@@ -44,9 +59,7 @@ export default function DashboardPage() {
         }
 
         setError(
-          err instanceof Error
-            ? err.message
-            : "Server bilan bog'lanib bo'lmadi."
+          err instanceof Error ? err.message : "Server bilan bog'lanib bo'lmadi."
         );
       })
       .finally(() => {
@@ -66,7 +79,6 @@ export default function DashboardPage() {
 
   async function handleLogout() {
     if (busy) return;
-
     setBusy(true);
     setError("");
 
@@ -75,9 +87,7 @@ export default function DashboardPage() {
       router.replace("/login");
     } catch (err: unknown) {
       setError(
-        err instanceof Error
-          ? err.message
-          : "Tizimdan chiqishda xatolik yuz berdi."
+        err instanceof Error ? err.message : "Tizimdan chiqishda xatolik yuz berdi."
       );
       setBusy(false);
     }
@@ -105,11 +115,8 @@ export default function DashboardPage() {
             onRetry={handleRetry}
           />
           <div className="mt-5 text-center">
-            <Link
-              href="/login"
-              className="text-sm font-semibold text-[var(--primary)] hover:underline"
-            >
-              Kirish sahifasiga o&apos;tish
+            <Link href="/login" className="text-sm font-semibold text-[var(--primary)] hover:underline">
+              Kirish sahifasiga o'tish
             </Link>
           </div>
         </div>
@@ -118,88 +125,81 @@ export default function DashboardPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[var(--background)] px-4 py-10 sm:px-8">
-      <div className="mx-auto max-w-5xl">
-        <header className="mb-8 flex flex-wrap items-center justify-between gap-4">
-          <MedVisionLogo href="/dashboard" size="header" />
+    <main className="mx-auto max-w-7xl space-y-7 px-5 py-7 sm:px-8">
 
-          <div className="flex flex-wrap items-center gap-3">
-            <ThemeSwitcher />
-            <button
-              type="button"
-              onClick={handleLogout}
-              disabled={busy}
-              className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-5 py-3 text-sm font-semibold text-[var(--foreground)] transition-colors hover:bg-[var(--surface-muted)] disabled:opacity-50"
+
+          <section className="med-gradient relative overflow-hidden rounded-3xl p-7 text-white sm:p-10">
+            <div className="pointer-events-none absolute -right-16 -top-20 size-72 rounded-full border-[35px] border-white/10" />
+            <div className="pointer-events-none absolute -bottom-28 right-28 size-64 rounded-full bg-white/5" />
+
+            <div className="relative z-10 flex flex-wrap items-end justify-between gap-6">
+              <div className="max-w-xl">
+                <p className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1.5 text-xs font-semibold">
+                  <Sparkles size={14} />
+                  MEDVISION WORKSPACE
+                </p>
+                <h2 className="mt-5 text-3xl font-extrabold tracking-tight sm:text-4xl">
+                  Xush kelibsiz, {user.name}!
+                </h2>
+                <p className="mt-3 text-sm leading-7 text-white/85">
+                  Tibbiy tasvirlarni tahlil qiling, segmentatsiya natijalarini
+                  kuzating va barcha ishlaringizni bir joyda boshqaring.
+                </p>
+              </div>
+
+              <Link
+                href="/dashboard/segment"
+                className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-teal-800 transition-transform hover:-translate-y-0.5"
+              >
+                <ScanLine size={18} />
+                Yangi tahlil
+                <ArrowRight size={17} />
+              </Link>
+            </div>
+          </section>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <Link
+              href="/dashboard/segment"
+              className="group border border-[var(--border)] bg-[var(--surface)] shadow-sm flex items-center justify-between rounded-2xl p-5"
             >
-              {busy ? "Chiqilmoqda..." : "Tizimdan chiqish"}
-            </button>
-          </div>
-        </header>
+              <div className="flex items-center gap-4">
+                <div className="rounded-xl bg-[var(--primary-light)] p-3 text-[var(--primary)]">
+                  <Activity size={23} />
+                </div>
+                <div>
+                  <p className="font-bold text-[var(--foreground)]">Segmentation Studio</p>
+                  <p className="mt-1 text-sm text-[var(--muted)]">Yangi tasvirni tahlil qilish</p>
+                </div>
+              </div>
+              <ArrowRight size={19} className="text-[var(--muted)] transition-transform group-hover:translate-x-1" />
+            </Link>
 
-        <section className="med-card p-7 sm:p-10">
-          <p className="mb-2 text-sm font-semibold text-[var(--primary)]">
-            MEDVISION DASHBOARD
-          </p>
-
-          <h1 className="text-3xl font-extrabold text-[var(--foreground)]">
-            Xush kelibsiz, {user.name}!
-          </h1>
-
-          <p className="mt-3 text-[var(--muted)]">
-            Siz MedVision platformasiga muvaffaqiyatli kirdingiz.
-          </p>
-
-          <div className="mt-8 rounded-2xl bg-[var(--surface-muted)] p-5">
-            <h2 className="mb-4 text-lg font-bold text-[var(--foreground)]">
-              Shaxsiy ma&apos;lumotlar
-            </h2>
-
-            <p className="text-sm text-[var(--muted)]">Ism</p>
-            <p className="mb-4 font-semibold text-[var(--foreground)]">
-              {user.name}
-            </p>
-
-            <p className="text-sm text-[var(--muted)]">Email</p>
-            <p className="break-all font-semibold text-[var(--foreground)]">
-              {user.email}
-            </p>
+            <Link
+              href="/dashboard/history"
+              className="group border border-[var(--border)] bg-[var(--surface)] shadow-sm flex items-center justify-between rounded-2xl p-5"
+            >
+              <div className="flex items-center gap-4">
+                <div className="rounded-xl bg-[var(--primary-light)] p-3 text-[var(--primary)]">
+                  <Clock3 size={23} />
+                </div>
+                <div>
+                  <p className="font-bold text-[var(--foreground)]">Analysis History</p>
+                  <p className="mt-1 text-sm text-[var(--muted)]">Oldingi natijalarni ko'rish</p>
+                </div>
+              </div>
+              <ArrowRight size={19} className="text-[var(--muted)] transition-transform group-hover:translate-x-1" />
+            </Link>
           </div>
 
-          <div className="mt-8 rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-6 sm:p-8">
-  <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-    <div>
-      <p className="text-xs font-bold uppercase tracking-widest text-[var(--primary)]">
-        MEDVISION ANALYSIS STUDIO
-      </p>
-      <h2 className="mt-2 text-xl font-bold text-[var(--foreground)]">
-        Tibbiy tasvirlarni tahlil qilish
-      </h2>
-      <p className="mt-2 max-w-md text-sm leading-6 text-[var(--muted)]">
-        PNG yoki JPEG tasvir yuklang va segmentatsiya jarayonini boshlang.
-      </p>
-    </div>
-
-    <Link
-      href="/dashboard/segment"
-      className="med-button med-button-primary shrink-0"
-    >
-      Tahlilni boshlash
-    </Link>
-  </div>
-</div>
-
-<DashboardOverview />
+          <DashboardOverview />
 
           {error && (
-            <div className="mt-6">
-              <ErrorState
-                title="Amalni bajarib bo'lmadi"
-                description={error}
-              />
-            </div>
+            <ErrorState
+              title="Amalni bajarib bo'lmadi"
+              description={error}
+            />
           )}
-        </section>
-      </div>
     </main>
   );
 }
