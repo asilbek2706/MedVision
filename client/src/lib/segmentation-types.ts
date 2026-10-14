@@ -19,9 +19,12 @@ export type AnalysisOptions = {
 
 export type AnalysisParameters = {
   name?: string;
-  algorithm: "OTSU";
+  algorithm: "OTSU" | "MANUAL" | "ADAPTIVE";
   blurKernelSize: number;
   invert: boolean;
+  threshold?: number;
+  blockSize?: number;
+  c?: number;
 };
 
 export type AnalysisStatus =
@@ -40,6 +43,9 @@ export type AnalysisResult = {
   foregroundPixels: number | null;
   foregroundRatio: number | null;
   processingTimeMs: number | null;
+  diceScore: number | null;
+  iouScore: number | null;
+  hasGroundTruth: boolean;
   errorCode: string | null;
   createdAt: string;
   completedAt: string | null;

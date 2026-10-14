@@ -11,6 +11,8 @@ import { ThemeSwitcher } from "@/components/ui/ThemeSwitcher";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { AnalysisVisualization } from "@/components/segmentation/AnalysisVisualization";
+import { GroundTruthEvaluation } from "@/components/segmentation/GroundTruthEvaluation";
+import type { AnalysisResult } from "@/lib/segmentation-types";
 
 import {
   authApi,
@@ -143,7 +145,7 @@ export default function AnalysisDetailPage() {
                 />
               </div>
               <p className="mt-2 text-sm text-[var(--muted)]">
-                Rasm: {image.originalName} · {analysis.status}
+                Rasm: {image.originalName} Â· {analysis.status}
               </p>
             </div>
             <ScanLine size={28} className="text-[var(--primary)]" />
@@ -161,7 +163,7 @@ export default function AnalysisDetailPage() {
               <p className="text-xs text-[var(--muted)]">Foreground</p>
               <p className="mt-2 font-bold text-[var(--foreground)]">
                 {analysis.foregroundRatio === null
-                  ? "—"
+                  ? "â€”"
                   : `${(analysis.foregroundRatio * 100).toFixed(2)}%`}
               </p>
             </div>
@@ -170,7 +172,7 @@ export default function AnalysisDetailPage() {
               <p className="text-xs text-[var(--muted)]">Processing time</p>
               <p className="mt-2 font-bold text-[var(--foreground)]">
                 {analysis.processingTimeMs === null
-                  ? "—"
+                  ? "â€”"
                   : `${analysis.processingTimeMs} ms`}
               </p>
             </div>
@@ -187,10 +189,10 @@ export default function AnalysisDetailPage() {
 
           <div className="mt-6 rounded-xl border border-[var(--border)] p-5">
             <h2 className="font-bold text-[var(--foreground)]">
-              Rasm ma'lumotlari
+              Rasm ma&apos;lumotlari
             </h2>
             <p className="mt-3 text-sm text-[var(--muted)]">
-              O'lcham: {image.width} × {image.height} px
+              O&apos;lcham: {image.width} {"\u00D7"} {image.height} px
             </p>
             <p className="mt-2 text-sm text-[var(--muted)]">
               Hajm: {(image.sizeBytes / 1024 / 1024).toFixed(2)} MB
@@ -205,10 +207,27 @@ export default function AnalysisDetailPage() {
         </section>
 
         {analysis.status === "COMPLETED" && (
-          <div className="mt-6">
+          <div className="mt-6 space-y-6">
             <AnalysisVisualization
               imageId={analysis.imageId}
               analysisId={analysis.id}
+            />
+
+            <GroundTruthEvaluation
+              key={`evaluation-${analysis.id}`}
+              analysis={analysis}
+              onEvaluated={(result: AnalysisResult) => {
+                setAnalysis((previous) =>
+                  previous
+                    ? {
+                        ...previous,
+                        diceScore: result.diceScore,
+                        iouScore: result.iouScore,
+                        hasGroundTruth: result.hasGroundTruth,
+                      }
+                    : previous,
+                );
+              }}
             />
           </div>
         )}

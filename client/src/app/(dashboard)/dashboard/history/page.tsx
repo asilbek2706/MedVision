@@ -41,11 +41,12 @@ export default function HistoryPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    let active = true;
-
+  const beginRequest = () => {
     setLoading(true);
     setError("");
+  };
+  useEffect(() => {
+    let active = true;
 
     Promise.all([
       authApi.me(),
@@ -113,12 +114,15 @@ export default function HistoryPage() {
                 Tahlillar tarixi
               </h1>
               <p className="mt-2 text-sm text-[var(--muted)]">
-                Oldingi segmentatsiya natijalarini ko'ring va filtrlang.
+                Oldingi segmentatsiya natijalarini ko&apos;ring va filtrlang.
               </p>
             </div>
             <button
               type="button"
-              onClick={() => setRefreshKey((v) => v + 1)}
+              onClick={() => {
+                beginRequest();
+                setRefreshKey((v) => v + 1);
+              }}
               disabled={loading}
               className="inline-flex items-center gap-2 rounded-xl border border-[var(--border)] px-4 py-2 text-sm font-semibold disabled:opacity-50"
             >
@@ -133,6 +137,7 @@ export default function HistoryPage() {
               <select
                 value={status}
                 onChange={(e) => {
+                  beginRequest();
                   setStatus(e.target.value as AnalysisStatus | "");
                   setPage(0);
                 }}
@@ -152,6 +157,7 @@ export default function HistoryPage() {
                 value={from}
                 max={to || undefined}
                 onChange={(e) => {
+                  beginRequest();
                   setFrom(e.target.value);
                   setPage(0);
                 }}
@@ -166,6 +172,7 @@ export default function HistoryPage() {
                 value={to}
                 min={from || undefined}
                 onChange={(e) => {
+                  beginRequest();
                   setTo(e.target.value);
                   setPage(0);
                 }}
@@ -181,6 +188,7 @@ export default function HistoryPage() {
             <button
               type="button"
               onClick={() => {
+                beginRequest();
                 setStatus("");
                             setFrom("");
                 setTo("");
@@ -205,7 +213,7 @@ export default function HistoryPage() {
               </p>
             ) : result?.items.length === 0 ? (
               <p className="py-8 text-center text-[var(--muted)]">
-                Bu filterlar bo'yicha tahlillar topilmadi.
+                Bu filterlar bo&apos;yicha tahlillar topilmadi.
               </p>
             ) : (
               result?.items.map((item) => (
@@ -263,7 +271,10 @@ export default function HistoryPage() {
               <button
                 type="button"
                 disabled={loading || result.first}
-                onClick={() => setPage((p) => Math.max(0, p - 1))}
+                onClick={() => {
+                  beginRequest();
+                  setPage((p) => Math.max(0, p - 1));
+                }}
                 className="med-button disabled:opacity-40"
               >
                 Oldingi
@@ -276,7 +287,10 @@ export default function HistoryPage() {
               <button
                 type="button"
                 disabled={loading || result.last}
-                onClick={() => setPage((p) => p + 1)}
+                onClick={() => {
+                  beginRequest();
+                  setPage((p) => p + 1);
+                }}
                 className="med-button disabled:opacity-40"
               >
                 Keyingi

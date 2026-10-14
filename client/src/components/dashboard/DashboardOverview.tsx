@@ -119,7 +119,7 @@ export function DashboardOverview() {
           <div className="flex items-center gap-2">
             <Activity size={20} className="text-[var(--primary)]" />
             <h3 className="text-lg font-bold text-[var(--foreground)]">
-              So'nggi tahlillar
+              So&apos;nggi tahlillar
             </h3>
           </div>
 

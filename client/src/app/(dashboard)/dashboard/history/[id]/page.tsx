@@ -6,7 +6,7 @@ export default function AnalysisDetailPage() {
     <Suspense
       fallback={
         <div className="p-8 text-sm text-[var(--muted)]">
-          Tahlil ma'lumotlari yuklanmoqda...
+          Tahlil ma&apos;lumotlari yuklanmoqda...
         </div>
       }
     >

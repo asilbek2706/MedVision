@@ -169,6 +169,15 @@ export const segmentationApi = {
     return postMultipart<MedicalImage>("/api/images", formData);
   },
 
+  evaluate: (analysisId: string, file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    return postMultipart<AnalysisResult>(
+      `/api/analyses/${encodeURIComponent(analysisId)}/evaluate`,
+      formData,
+    );
+  },
   validate: (parameters: AnalysisParameters) =>
     post<AnalysisParameters>(
       "/api/analysis-options/validate",
@@ -225,6 +234,9 @@ export type AnalysisHistoryItem = {
   foregroundPixels: number | null;
   foregroundRatio: number | null;
   processingTimeMs: number | null;
+  diceScore: number | null;
+  iouScore: number | null;
+  hasGroundTruth: boolean;
   errorCode: string | null;
   createdAt: string;
   completedAt: string | null;

@@ -16,7 +16,7 @@ public class AnalysisOptionsService {
                 10L * 1024 * 1024,
                 4096,
                 4096,
-                false
+                true
         );
     }
 
