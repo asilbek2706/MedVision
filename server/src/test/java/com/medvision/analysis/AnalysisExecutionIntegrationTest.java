@@ -181,6 +181,61 @@ class AnalysisExecutionIntegrationTest {
                 .noneMatch(a -> a.getImage().getId().equals(image.getId())));
     }
 
+    @Test
+    void executesAllThreeAlgorithmsOnSameImage() throws Exception {
+        User owner = createUser();
+        MedicalImage image = createImage(owner, png());
+
+        List<AnalysisParametersRequest> requests = List.of(
+                new AnalysisParametersRequest(
+                        "Otsu comparison", "OTSU", 5, false
+                ),
+                new AnalysisParametersRequest(
+                        "Manual comparison", "MANUAL", 5, false,
+                        128, null, null
+                ),
+                new AnalysisParametersRequest(
+                        "Adaptive comparison", "ADAPTIVE", 5, false,
+                        null, 11, 2.0
+                )
+        );
+
+        for (AnalysisParametersRequest request : requests) {
+            AnalysisResponse response = execution.execute(
+                    owner.getId(),
+                    image.getId(),
+                    request
+            );
+
+            assertEquals(
+                    AnalysisStatus.COMPLETED,
+                    response.status(),
+                    request.algorithm()
+            );
+
+            Analysis stored = analyses.findById(
+                    response.id()
+            ).orElseThrow();
+
+            assertEquals(
+                    request.algorithm(),
+                    stored.getAlgorithm()
+            );
+
+            assertNotNull(stored.getMaskKey());
+            assertNotNull(stored.getOverlayKey());
+
+            assertTrue(
+                    Files.exists(ROOT.resolve(stored.getMaskKey()))
+            );
+
+            assertTrue(
+                    Files.exists(ROOT.resolve(stored.getOverlayKey()))
+            );
+
+            assertNotNull(stored.getForegroundPixels());
+        }
+    }
     @AfterEach
     void cleanup() {
         for (UUID imageId : imageIds) {
