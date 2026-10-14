@@ -89,20 +89,10 @@ export default function HistoryPage() {
     "w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 text-sm text-[var(--foreground)]";
 
   return (
-    <main className="min-h-screen bg-[var(--background)] px-4 py-8 sm:px-8">
+    <main className="min-h-screen bg-[var(--background)] px-5 py-7 sm:px-8">
       <div className="mx-auto max-w-6xl">
-        <header className="mb-8 flex items-center justify-between gap-4">
-          <MedVisionLogo href="/dashboard" size="header" />
-          <ThemeSwitcher />
-        </header>
 
-        <Link
-          href="/dashboard"
-          className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-[var(--muted)] hover:text-[var(--primary)]"
-        >
-          <ArrowLeft size={16} />
-          Dashboardga qaytish
-        </Link>
+        
 
         <section className="med-card p-5 sm:p-8">
           <div className="flex flex-wrap items-center justify-between gap-4">

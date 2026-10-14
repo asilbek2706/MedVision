@@ -1,4 +1,4 @@
-﻿@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
 @import "tailwindcss";
 
 
@@ -121,3 +121,165 @@ button:disabled {
 
 
 
+
+
+/* MEDVISION PREMIUM APP SHELL START */
+
+.med-app-shell {
+  --shell-border: rgba(148, 163, 184, 0.16);
+  --shell-accent: #14b8a6;
+  --shell-accent-soft: rgba(20, 184, 166, 0.11);
+  background: var(--background);
+}
+
+.med-app-sidebar {
+  background: var(--surface);
+  border-right: 1px solid var(--shell-border);
+}
+
+.med-app-content {
+  min-width: 0;
+  background: var(--background);
+}
+
+.med-app-header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--shell-border);
+  min-height: 96px;
+  display: flex;
+  align-items: center;
+}
+
+/* Header va sidebar chegaralarining bir xil darajada bo'lishi */
+.med-app-sidebar > div:first-child {
+  min-height: 96px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--shell-border);
+}
+
+/* Premium cards */
+.med-app-content .med-card {
+  border-radius: 24px;
+  border: 1px solid var(--shell-border);
+  background: var(--surface);
+  box-shadow: 0 6px 24px rgba(2, 6, 23, 0.045);
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.med-app-content .med-card:hover {
+  border-color: rgba(20, 184, 166, 0.26);
+  box-shadow: 0 10px 30px rgba(2, 6, 23, 0.08);
+}
+
+/* Buttons */
+.med-app-content .med-button {
+  border-radius: 14px;
+}
+
+/* Form controls */
+.med-app-content .med-input {
+  border-radius: 14px;
+}
+
+/* Better focus accessibility */
+.med-app-shell a:focus-visible,
+.med-app-shell button:focus-visible {
+  outline: 2px solid var(--shell-accent);
+  outline-offset: 3px;
+}
+
+/* MEDVISION PREMIUM APP SHELL END */
+/* MEDVISION DESIGN 322 START */
+
+.med-app-shell {
+  --med-radius: 24px;
+  --med-line: rgba(148, 163, 184, 0.16);
+  background: var(--background);
+}
+
+.med-app-sidebar {
+  background: var(--surface);
+  border-right: 1px solid var(--med-line);
+}
+
+.med-app-header {
+  min-height: 110px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--med-line);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.med-app-sidebar > div:first-child {
+  min-height: 110px;
+  border-bottom: 1px solid var(--med-line);
+}
+
+.med-app-content {
+  background: var(--background);
+}
+
+.med-app-content .med-card {
+  border-radius: var(--med-radius);
+  border: 1px solid var(--med-line);
+  background: var(--surface);
+  box-shadow: 0 8px 30px rgba(2, 6, 23, 0.045);
+}
+
+.med-app-content .med-card:hover {
+  border-color: rgba(20, 184, 166, 0.28);
+}
+
+.med-app-content .med-input {
+  min-height: 48px;
+  border-radius: 14px;
+  background: var(--surface-muted);
+  border: 1px solid var(--med-line);
+}
+
+.med-app-content .med-input:focus {
+  outline: 2px solid rgba(20, 184, 166, 0.35);
+  outline-offset: 1px;
+}
+
+.med-app-content .med-button {
+  min-height: 46px;
+  border-radius: 14px;
+  font-weight: 650;
+}
+
+.med-app-content .med-button-primary {
+  background: #0d9488;
+  color: white;
+}
+
+.med-app-content .med-button-primary:hover {
+  background: #0f766e;
+}
+
+.med-app-content section {
+  scroll-margin-top: 130px;
+}
+
+/* MEDVISION DESIGN 322 END */
+/* MEDVISION ROUNDED UI 323 START */
+
+.med-app-content .med-card,
+.med-app-content .rounded-xl,
+.med-app-content .rounded-2xl,
+.med-app-content .rounded-3xl {
+  border-radius: 22px;
+}
+
+.med-app-content button,
+.med-app-content input,
+.med-app-content select {
+  border-radius: 14px;
+}
+
+.med-app-content .med-button {
+  border-radius: 16px;
+}
+
+/* MEDVISION ROUNDED UI 323 END */

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ScanLine, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ScanLine, ShieldCheck, LayoutDashboard, History, Activity } from "lucide-react";
 
 import { MedVisionLogo } from "@/components/ui/MedVisionLogo";
 import { ThemeSwitcher } from "@/components/ui/ThemeSwitcher";
@@ -183,20 +183,9 @@ export default function SegmentPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[var(--background)] px-4 py-8 sm:px-8">
-      <div className="mx-auto max-w-6xl">
-        <header className="mb-10 flex flex-wrap items-center justify-between gap-4">
-          <MedVisionLogo href="/dashboard" size="header" />
-          <ThemeSwitcher />
-        </header>
+    <main className="mx-auto max-w-7xl px-5 py-7 sm:px-8">
 
-        <Link
-          href="/dashboard"
-          className="mb-7 inline-flex items-center gap-2 text-sm font-semibold text-[var(--muted)] transition-colors hover:text-[var(--primary)]"
-        >
-          <ArrowLeft size={16} />
-          Dashboardga qaytish
-        </Link>
+        
 
         <div className="mb-8 flex flex-wrap items-start justify-between gap-5">
           <div>
@@ -206,7 +195,7 @@ export default function SegmentPage() {
             </div>
 
             <h1 className="text-3xl font-extrabold tracking-tight text-[var(--foreground)] sm:text-4xl">
-              Medical Image Segmentation
+              Segmentation Studio
             </h1>
 
             <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--muted)] sm:text-base">
@@ -221,8 +210,8 @@ export default function SegmentPage() {
           </div>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_310px]">
-          <section className="med-card p-5 sm:p-8">
+        <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+          <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm sm:p-8">
             <div className="mb-6">
               <p className="text-xs font-bold uppercase tracking-widest text-[var(--primary)]">
                 01 / IMAGE INPUT
@@ -326,7 +315,7 @@ export default function SegmentPage() {
             )}
 
             {analysis && (
-              <div className="med-card p-6">
+              <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm">
                 <h3 className="text-lg font-bold text-[var(--foreground)]">
                   {analysis.name || "Segmentatsiya natijasi"}
                 </h3>
@@ -350,7 +339,7 @@ export default function SegmentPage() {
             )}
           </div>
           {analysis?.status === "COMPLETED" && (
-            <div className="space-y-6 lg:col-span-2">
+            <div className="space-y-6 xl:col-span-2">
               <AnalysisVisualization
                 key={analysis.id}
                 imageId={analysis.imageId}
@@ -365,7 +354,7 @@ export default function SegmentPage() {
             </div>
           )}
           <aside className="space-y-5">
-            <div className="med-card p-6">
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm">
               <p className="text-xs font-bold uppercase tracking-widest text-[var(--primary)]">
                 WORKSPACE
               </p>
@@ -399,7 +388,6 @@ export default function SegmentPage() {
             </div>
           </aside>
         </div>
-      </div>
     </main>
   );
 }

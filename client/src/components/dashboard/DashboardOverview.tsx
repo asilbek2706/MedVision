@@ -103,18 +103,20 @@ export function DashboardOverview() {
         {cards.map(({ label, value, icon: Icon }) => (
           <div
             key={label}
-            className="rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-5"
+            className="group border border-[var(--border)] bg-[var(--surface)] shadow-sm relative overflow-hidden rounded-2xl p-6"
           >
-            <Icon size={22} className="text-[var(--primary)]" />
-            <p className="mt-4 text-3xl font-extrabold text-[var(--foreground)]">
+            <div className="inline-flex rounded-xl bg-[var(--primary-light)] p-3 text-[var(--primary)]">
+              <Icon size={22} />
+            </div>
+            <p className="mt-5 text-4xl font-extrabold tracking-tight text-[var(--foreground)]">
               {loading && !stats ? "..." : value}
             </p>
-            <p className="mt-1 text-sm text-[var(--muted)]">{label}</p>
+            <p className="mt-2 text-sm font-medium text-[var(--muted)]">{label}</p>
           </div>
         ))}
       </div>
 
-      <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-5 sm:p-6">
+      <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm p-5 sm:p-6">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <Activity size={20} className="text-[var(--primary)]" />
@@ -127,7 +129,7 @@ export function DashboardOverview() {
             href="/dashboard/history"
             className="text-sm font-semibold text-[var(--primary)] hover:underline"
           >
-            Barcha tahlillar →
+            Barcha tahlillar
           </Link>
         </div>
 
