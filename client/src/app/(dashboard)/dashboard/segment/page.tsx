@@ -12,6 +12,7 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { ImageUploader } from "@/components/segmentation/ImageUploader";
 import { AnalysisParametersPanel } from "@/components/segmentation/AnalysisParametersPanel";
 import { AnalysisVisualization } from "@/components/segmentation/AnalysisVisualization";
+import { GroundTruthEvaluation } from "@/components/segmentation/GroundTruthEvaluation";
 import { authApi, segmentationApi, ApiRequestError } from "@/lib/api";
 import type { AnalysisOptions, MedicalImage, AnalysisParameters, AnalysisResult } from "@/lib/segmentation-types";
 
@@ -52,11 +53,24 @@ export default function SegmentPage() {
     setAnalysis(null);
 
     try {
-      await segmentationApi.validate(parameters);
-      const result = await segmentationApi.execute(uploadedImage.id, {
-        ...parameters,
+      const request: AnalysisParameters = {
         name,
-      });
+        algorithm: parameters.algorithm,
+        blurKernelSize: parameters.blurKernelSize,
+        invert: parameters.invert,
+        ...(parameters.algorithm === "MANUAL"
+          ? { threshold: parameters.threshold ?? 127 }
+          : {}),
+        ...(parameters.algorithm === "ADAPTIVE"
+          ? {
+              blockSize: parameters.blockSize ?? 11,
+              c: parameters.c ?? 2,
+            }
+          : {}),
+      };
+
+      await segmentationApi.validate(request);
+      const result = await segmentationApi.execute(uploadedImage.id, request);
       setAnalysis(result);
     } catch (err: unknown) {
       if (
@@ -271,7 +285,7 @@ export default function SegmentPage() {
                   Image ID: {uploadedImage.id}
                 </p>
                 <p className="mt-1 text-sm text-[var(--muted)]">
-                  {uploadedImage.width} × {uploadedImage.height} px
+                  {uploadedImage.width} Ãƒâ€” {uploadedImage.height} px
                 </p>
               </div>
             )}
@@ -336,11 +350,17 @@ export default function SegmentPage() {
             )}
           </div>
           {analysis?.status === "COMPLETED" && (
-            <div className="lg:col-span-2">
+            <div className="space-y-6 lg:col-span-2">
               <AnalysisVisualization
                 key={analysis.id}
                 imageId={analysis.imageId}
                 analysisId={analysis.id}
+              />
+
+              <GroundTruthEvaluation
+                key={`evaluation-${analysis.id}`}
+                analysis={analysis}
+                onEvaluated={setAnalysis}
               />
             </div>
           )}

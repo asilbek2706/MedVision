@@ -61,6 +61,140 @@ export function AnalysisParametersPanel({
 
         <div>
           <label
+            htmlFor="segmentation-algorithm"
+            className="mb-2 block text-sm font-semibold text-[var(--foreground)]"
+          >
+            Segmentatsiya algoritmi
+          </label>
+
+          <select
+            id="segmentation-algorithm"
+            value={value.algorithm}
+            disabled={disabled}
+            onChange={(event) => {
+              const algorithm = event.target.value as AnalysisParameters["algorithm"];
+
+              onChange({
+                ...value,
+                algorithm,
+                threshold: algorithm === "MANUAL" ? (value.threshold ?? 127) : undefined,
+                blockSize: algorithm === "ADAPTIVE" ? (value.blockSize ?? 11) : undefined,
+                c: algorithm === "ADAPTIVE" ? (value.c ?? 2) : undefined,
+              });
+            }}
+            className="med-input w-full disabled:opacity-50"
+          >
+            <option value="OTSU">OTSU - avtomatik threshold</option>
+            <option value="MANUAL">MANUAL - qo&apos;lda threshold</option>
+            <option value="ADAPTIVE">ADAPTIVE - lokal threshold</option>
+          </select>
+
+          <p className="mt-2 text-xs leading-5 text-[var(--muted)]">
+            Algoritmni tanlang va kerakli parametrlarni sozlang.
+          </p>
+        </div>
+
+        {value.algorithm === "MANUAL" && (
+          <div>
+            <label
+              htmlFor="manual-threshold"
+              className="mb-2 block text-sm font-semibold text-[var(--foreground)]"
+            >
+              Threshold: {value.threshold ?? 127}
+            </label>
+
+            <input
+              id="manual-threshold"
+              type="range"
+              min={0}
+              max={255}
+              step={1}
+              value={value.threshold ?? 127}
+              disabled={disabled}
+              onChange={(event) =>
+                onChange({
+                  ...value,
+                  threshold: Number(event.target.value),
+                })
+              }
+              className="w-full accent-[var(--primary)] disabled:opacity-50"
+            />
+
+            <p className="mt-2 text-xs text-[var(--muted)]">
+              0 dan 255 gacha bo&apos;lgan threshold qiymati.
+            </p>
+          </div>
+        )}
+
+        {value.algorithm === "ADAPTIVE" && (
+          <div className="space-y-5">
+            <div>
+              <label
+                htmlFor="adaptive-block-size"
+                className="mb-2 block text-sm font-semibold text-[var(--foreground)]"
+              >
+                Block Size
+              </label>
+
+              <select
+                id="adaptive-block-size"
+                value={value.blockSize ?? 11}
+                disabled={disabled}
+                onChange={(event) =>
+                  onChange({
+                    ...value,
+                    blockSize: Number(event.target.value),
+                  })
+                }
+                className="med-input w-full disabled:opacity-50"
+              >
+                {Array.from({ length: 15 }, (_, index) => index * 2 + 3).map(
+                  (size) => (
+                    <option key={size} value={size}>
+                      {size}
+                    </option>
+                  ),
+                )}
+              </select>
+
+              <p className="mt-2 text-xs text-[var(--muted)]">
+                Lokal threshold uchun toq o&apos;lcham (3-31).
+              </p>
+            </div>
+
+            <div>
+              <label
+                htmlFor="adaptive-c"
+                className="mb-2 block text-sm font-semibold text-[var(--foreground)]"
+              >
+                C: {value.c ?? 2}
+              </label>
+
+              <input
+                id="adaptive-c"
+                type="range"
+                min={-50}
+                max={50}
+                step={1}
+                value={value.c ?? 2}
+                disabled={disabled}
+                onChange={(event) =>
+                  onChange({
+                    ...value,
+                    c: Number(event.target.value),
+                  })
+                }
+                className="w-full accent-[var(--primary)] disabled:opacity-50"
+              />
+
+              <p className="mt-2 text-xs text-[var(--muted)]">
+                Lokal threshold hisobidagi C konstantasi.
+              </p>
+            </div>
+          </div>
+        )}
+        <div>
+          <label
             htmlFor="blur-kernel"
             className="mb-2 block text-sm font-semibold text-[var(--foreground)]"
           >
@@ -81,7 +215,7 @@ export function AnalysisParametersPanel({
           >
             {KERNEL_SIZES.map((size) => (
               <option key={size} value={size}>
-                {size} × {size}
+                {size} {"\u00D7"} {size}
                 {size === 1 ? " (Blur off)" : ""}
               </option>
             ))}
