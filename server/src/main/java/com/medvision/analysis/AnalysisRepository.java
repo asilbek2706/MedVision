@@ -1,5 +1,7 @@
 package com.medvision.analysis;
 
+import jakarta.persistence.LockModeType;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -17,6 +19,17 @@ public interface AnalysisRepository extends JpaRepository<Analysis, UUID> {
     Page<Analysis> findByImage_User_Id(UUID userId, Pageable pageable);
 
     Optional<Analysis> findByIdAndImage_User_Id(UUID id, UUID userId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            SELECT a FROM Analysis a
+            WHERE a.id = :id
+              AND a.image.user.id = :ownerId
+            """)
+    Optional<Analysis> findOwnedForEvaluationUpdate(
+            @Param("id") UUID id,
+            @Param("ownerId") UUID ownerId
+    );
 
     long countByImage_User_IdAndStatus(UUID userId, AnalysisStatus status);
     @Query("""

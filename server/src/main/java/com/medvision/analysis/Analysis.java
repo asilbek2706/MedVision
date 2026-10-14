@@ -51,6 +51,14 @@ public class Analysis {
     @Column(name = "processing_time_ms")
     private Long processingTimeMs;
 
+    @Column(name = "dice_score")
+    private Double diceScore;
+
+    @Column(name = "iou_score")
+    private Double iouScore;
+
+    @Column(name = "ground_truth_key", length = 500)
+    private String groundTruthKey;
     @Column(name = "error_code", length = 100)
     private String errorCode;
 
@@ -116,6 +124,38 @@ public class Analysis {
         this.status = AnalysisStatus.COMPLETED;
     }
 
+    public void completeEvaluation(
+            String groundTruthKey,
+            double diceScore,
+            double iouScore
+    ) {
+        if (status != AnalysisStatus.COMPLETED) {
+            throw new IllegalStateException(
+                    "Only completed analyses can be evaluated."
+            );
+        }
+
+        String validatedKey = requireKey(groundTruthKey);
+
+        if (!Double.isFinite(diceScore)
+                || !Double.isFinite(iouScore)
+                || diceScore < 0 || diceScore > 1
+                || iouScore < 0 || iouScore > 1) {
+            throw new IllegalArgumentException(
+                    "Evaluation scores must be between 0 and 1."
+            );
+        }
+
+        if (this.groundTruthKey != null) {
+            throw new IllegalStateException(
+                    "Analysis has already been evaluated."
+            );
+        }
+
+        this.groundTruthKey = validatedKey;
+        this.diceScore = diceScore;
+        this.iouScore = iouScore;
+    }
     public void fail(String errorCode) {
         requireProcessing();
 
@@ -164,6 +204,9 @@ public class Analysis {
     public Long getForegroundPixels() { return foregroundPixels; }
     public Double getForegroundRatio() { return foregroundRatio; }
     public Long getProcessingTimeMs() { return processingTimeMs; }
+    public Double getDiceScore() { return diceScore; }
+    public Double getIouScore() { return iouScore; }
+    public String getGroundTruthKey() { return groundTruthKey; }
     public String getErrorCode() { return errorCode; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getCompletedAt() { return completedAt; }

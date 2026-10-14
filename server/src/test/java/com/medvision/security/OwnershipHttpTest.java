@@ -168,6 +168,194 @@ class OwnershipHttpTest {
         assertEquals(200, get(b, "/api/auth/me").statusCode());
     }
 
+    @Test
+    void evaluationEndpointEnforcesSecurity() throws Exception {
+        Browser ownerBrowser = new Browser();
+        Browser otherBrowser = new Browser();
+        Browser anonymousBrowser = new Browser();
+
+        String ownerEmail = UUID.randomUUID() + "@example.test";
+        String otherEmail = UUID.randomUUID() + "@example.test";
+
+        String ownerCsrf = csrf(ownerBrowser);
+        String otherCsrf = csrf(otherBrowser);
+        String anonymousCsrf = csrf(anonymousBrowser);
+
+        UserResponse owner = register(
+                ownerBrowser, ownerEmail, ownerCsrf
+        );
+
+        UserResponse other = register(
+                otherBrowser, otherEmail, otherCsrf
+        );
+
+        assertEquals(
+                200,
+                post(ownerBrowser, "/api/auth/login",
+                        Map.of(
+                                "email", ownerEmail,
+                                "password", PASSWORD
+                        ), ownerCsrf).statusCode()
+        );
+
+        assertEquals(
+                200,
+                post(otherBrowser, "/api/auth/login",
+                        Map.of(
+                                "email", otherEmail,
+                                "password", PASSWORD
+                        ), otherCsrf).statusCode()
+        );
+
+        ownerCsrf = csrf(ownerBrowser);
+        otherCsrf = csrf(otherBrowser);
+
+        MedicalImage image = fixtureImage(
+                owner.id(), "evaluation-security.png"
+        );
+
+        Analysis analysis = fixtureAnalysis(image);
+
+        String endpoint = "/api/analyses/"
+                + analysis.getId()
+                + "/evaluate";
+
+        byte[] png = createValidPng();
+
+        assertEquals(
+                401,
+                multipart(
+                        anonymousBrowser,
+                        endpoint,
+                        png,
+                        anonymousCsrf
+                ).statusCode()
+        );
+
+        assertEquals(
+                403,
+                multipart(
+                        ownerBrowser,
+                        endpoint,
+                        png,
+                        null
+                ).statusCode()
+        );
+
+        var forbidden = multipart(
+                otherBrowser,
+                endpoint,
+                png,
+                otherCsrf
+        );
+
+        assertEquals(
+                404,
+                forbidden.statusCode(),
+                forbidden.body()
+        );
+
+        byte[] invalidPng = new byte[]{
+                (byte) 137, 80, 78, 71, 13, 10, 26, 10
+        };
+
+        var invalidForeignUpload = multipart(
+                otherBrowser,
+                endpoint,
+                invalidPng,
+                otherCsrf
+        );
+
+        assertEquals(
+                404,
+                invalidForeignUpload.statusCode(),
+                invalidForeignUpload.body()
+        );
+    }
+
+    private byte[] createValidPng() throws Exception {
+        var image = new java.awt.image.BufferedImage(
+                10,
+                10,
+                java.awt.image.BufferedImage.TYPE_BYTE_GRAY
+        );
+
+        var graphics = image.createGraphics();
+
+        try {
+            graphics.setColor(java.awt.Color.BLACK);
+            graphics.fillRect(0, 0, 10, 10);
+
+            graphics.setColor(java.awt.Color.WHITE);
+            graphics.fillRect(2, 2, 6, 6);
+        } finally {
+            graphics.dispose();
+        }
+
+        try (var output = new java.io.ByteArrayOutputStream()) {
+            assertTrue(javax.imageio.ImageIO.write(
+                    image,
+                    "png",
+                    output
+            ));
+
+            return output.toByteArray();
+        } finally {
+            image.flush();
+        }
+    }
+    private HttpResponse<String> multipart(
+            Browser browser,
+            String path,
+            byte[] png,
+            String csrfToken
+    ) throws Exception {
+        String boundary = "MedVisionBoundary" + UUID.randomUUID();
+
+        byte[] prefix = (
+                "--" + boundary + "\r\n"
+                + "Content-Disposition: form-data; name=\"file\"; "
+                + "filename=\"ground-truth.png\"\r\n"
+                + "Content-Type: image/png\r\n\r\n"
+        ).getBytes(java.nio.charset.StandardCharsets.UTF_8);
+
+        byte[] suffix = (
+                "\r\n--" + boundary + "--\r\n"
+        ).getBytes(java.nio.charset.StandardCharsets.UTF_8);
+
+        byte[] body = new byte[
+                prefix.length + png.length + suffix.length
+        ];
+
+        System.arraycopy(prefix, 0, body, 0, prefix.length);
+        System.arraycopy(
+                png, 0, body, prefix.length, png.length
+        );
+        System.arraycopy(
+                suffix, 0, body,
+                prefix.length + png.length,
+                suffix.length
+        );
+
+        var builder = HttpRequest.newBuilder(uri(path))
+                .timeout(Duration.ofSeconds(15))
+                .header(
+                        "Content-Type",
+                        "multipart/form-data; boundary=" + boundary
+                )
+                .header("Accept", "application/json");
+
+        if (csrfToken != null) {
+            builder.header("X-CSRF-TOKEN", csrfToken);
+        }
+
+        return browser.client.send(
+                builder.POST(
+                        HttpRequest.BodyPublishers.ofByteArray(body)
+                ).build(),
+                HttpResponse.BodyHandlers.ofString()
+        );
+    }
     private Map<String, String> registration(String email) {
         return Map.of(
                 "name", "Ownership Test",
