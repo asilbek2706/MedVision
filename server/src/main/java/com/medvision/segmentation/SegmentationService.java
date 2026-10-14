@@ -1,5 +1,8 @@
 package com.medvision.segmentation;
 
+import com.medvision.segmentation.algorithms.AlgorithmParameters;
+import com.medvision.segmentation.algorithms.AlgorithmRegistry;
+import com.medvision.segmentation.algorithms.OtsuThresholdAlgorithm;
 import nu.pattern.OpenCV;
 import org.opencv.core.*;
 import org.opencv.imgcodecs.Imgcodecs;
@@ -12,6 +15,19 @@ import java.util.List;
 
 @Service
 public class SegmentationService {
+
+    private final AlgorithmRegistry algorithmRegistry;
+
+    public SegmentationService() {
+        this(new AlgorithmRegistry(
+                List.of(new OtsuThresholdAlgorithm())
+        ));
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public SegmentationService(AlgorithmRegistry algorithmRegistry) {
+        this.algorithmRegistry = algorithmRegistry;
+    }
 
     static {
         OpenCV.loadLocally();
@@ -60,6 +76,49 @@ public class SegmentationService {
     ) {}
 
     public Result segment(byte[] imageBytes, Options options) {
+        if (options == null) {
+            throw new IllegalArgumentException("Options are required.");
+        }
+
+        return segment(
+                imageBytes,
+                options,
+                "OTSU",
+                AlgorithmParameters.otsu(options.invert())
+        );
+    }
+
+    public Result segment(
+            byte[] imageBytes,
+            Options options,
+            String algorithmCode,
+            AlgorithmParameters parameters
+    ) {
+        if (algorithmCode == null || algorithmCode.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Algorithm code is required."
+            );
+        }
+
+        if (parameters == null) {
+            throw new IllegalArgumentException(
+                    "Algorithm parameters are required."
+            );
+        }
+
+        if (options == null) {
+            throw new IllegalArgumentException(
+                    "Options are required."
+            );
+        }
+
+        if (parameters.invert() != options.invert()) {
+            throw new IllegalArgumentException(
+                    "Invert settings must match."
+            );
+        }
+
+        var algorithm = algorithmRegistry.get(algorithmCode);
         if (imageBytes == null || imageBytes.length == 0
                 || imageBytes.length > 10 * 1024 * 1024) {
             throw new IllegalArgumentException("Invalid image input.");
@@ -115,16 +174,10 @@ public class SegmentationService {
             Mat mask = new Mat();
             allocated.add(mask);
 
-            int thresholdMode = options.invert()
-                    ? Imgproc.THRESH_BINARY_INV
-                    : Imgproc.THRESH_BINARY;
-
-            Imgproc.threshold(
+            algorithm.apply(
                     blurred,
                     mask,
-                    0,
-                    255,
-                    thresholdMode | Imgproc.THRESH_OTSU
+                    parameters
             );
 
             Mat kernel = Imgproc.getStructuringElement(
