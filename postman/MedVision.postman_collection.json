@@ -1,0 +1,743 @@
+{
+    "variable":  [
+                     {
+                         "key":  "baseUrl",
+                         "value":  "http://localhost:18080"
+                     },
+                     {
+                         "key":  "csrfToken",
+                         "value":  ""
+                     },
+                     {
+                         "key":  "imageId",
+                         "value":  ""
+                     },
+                     {
+                         "key":  "analysisId",
+                         "value":  ""
+                     }
+                 ],
+    "info":  {
+                 "description":  "Spring Boot REST API collection. Session authentication and CSRF protection are enabled. Run CSRF, register/login, refresh CSRF, upload, then segmentation.",
+                 "name":  "MedVision - Image Segmentation for Medical Image Analysis",
+                 "schema":  "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+             },
+    "item":  [
+                 {
+                     "name":  "Health",
+                     "item":  [
+                                  {
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{baseUrl}}/api/health",
+                                                      "description":  "Check backend status. Access: public.",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "GET Check backend status",
+                                      "response":  [
+
+                                                   ]
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Authentication",
+                     "item":  [
+                                  {
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{baseUrl}}/api/auth/csrf",
+                                                      "description":  "Retrieve CSRF token. Access: public.",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "GET Retrieve CSRF token",
+                                      "event":  [
+                                                    {
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "if (pm.response.code === 200) {",
+                                                                                    "  const data = pm.response.json();",
+                                                                                    "  pm.collectionVariables.set(\"csrfToken\", data.token);",
+                                                                                    "}"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   },
+                                                        "listen":  "test"
+                                                    }
+                                                ],
+                                      "response":  [
+
+                                                   ]
+                                  },
+                                  {
+                                      "request":  {
+                                                      "url":  "{{baseUrl}}/api/auth/register",
+                                                      "description":  "Register user. Access: public.",
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "X-CSRF-TOKEN",
+                                                                         "value":  "{{csrfToken}}"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "raw":  "{\"name\":\"Demo User\",\"email\":\"demo@example.test\",\"password\":\"DemoPassword2026!\"}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               },
+                                                                   "mode":  "raw"
+                                                               }
+                                                  },
+                                      "name":  "POST Register user",
+                                      "response":  [
+
+                                                   ]
+                                  },
+                                  {
+                                      "request":  {
+                                                      "url":  "{{baseUrl}}/api/auth/login",
+                                                      "description":  "Log in and establish session. Access: public.",
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "X-CSRF-TOKEN",
+                                                                         "value":  "{{csrfToken}}"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "raw":  "{\"email\":\"demo@example.test\",\"password\":\"DemoPassword2026!\"}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               },
+                                                                   "mode":  "raw"
+                                                               }
+                                                  },
+                                      "name":  "POST Log in and establish session",
+                                      "event":  [
+                                                    {
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "if (pm.response.code === 200) {",
+                                                                                    "  pm.collectionVariables.unset(\"csrfToken\");",
+                                                                                    "}"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   },
+                                                        "listen":  "test"
+                                                    }
+                                                ],
+                                      "response":  [
+
+                                                   ]
+                                  },
+                                  {
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{baseUrl}}/api/auth/me",
+                                                      "description":  "Get current user. Access: protected.",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "GET Get current user",
+                                      "response":  [
+
+                                                   ]
+                                  },
+                                  {
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "url":  "{{baseUrl}}/api/auth/logout",
+                                                      "description":  "Invalidate session. Access: protected.",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "X-CSRF-TOKEN",
+                                                                         "value":  "{{csrfToken}}"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "POST Invalidate session",
+                                      "response":  [
+
+                                                   ]
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Images",
+                     "item":  [
+                                  {
+                                      "request":  {
+                                                      "url":  "{{baseUrl}}/api/images",
+                                                      "description":  "Upload PNG or JPEG image. Access: protected.",
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "X-CSRF-TOKEN",
+                                                                         "value":  "{{csrfToken}}"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "formdata":  [
+                                                                                    {
+                                                                                        "key":  "file",
+                                                                                        "type":  "file",
+                                                                                        "src":  ""
+                                                                                    }
+                                                                                ],
+                                                                   "mode":  "formdata"
+                                                               }
+                                                  },
+                                      "name":  "POST Upload PNG or JPEG image",
+                                      "event":  [
+                                                    {
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "if (pm.response.code === 201) {",
+                                                                                    "  pm.collectionVariables.set(\"imageId\", pm.response.json().id);",
+                                                                                    "}"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   },
+                                                        "listen":  "test"
+                                                    }
+                                                ],
+                                      "response":  [
+
+                                                   ]
+                                  },
+                                  {
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{baseUrl}}/api/images?page=0\u0026size=20",
+                                                      "description":  "List owned images. Access: protected.",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "GET List owned images",
+                                      "response":  [
+
+                                                   ]
+                                  },
+                                  {
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{baseUrl}}/api/images/{{imageId}}",
+                                                      "description":  "Get image metadata. Access: protected.",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "GET Get image metadata",
+                                      "response":  [
+
+                                                   ]
+                                  },
+                                  {
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{baseUrl}}/api/images/{{imageId}}/content",
+                                                      "description":  "Get original image. Access: protected.",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "GET Get original image",
+                                      "response":  [
+
+                                                   ]
+                                  },
+                                  {
+                                      "request":  {
+                                                      "method":  "DELETE",
+                                                      "url":  "{{baseUrl}}/api/images/{{imageId}}",
+                                                      "description":  "Delete owned image. Access: protected.",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "X-CSRF-TOKEN",
+                                                                         "value":  "{{csrfToken}}"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "DELETE Delete owned image",
+                                      "response":  [
+
+                                                   ]
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Segmentation",
+                     "item":  [
+                                  {
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{baseUrl}}/api/analysis-options",
+                                                      "description":  "Get algorithm options. Access: protected.",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "GET Get algorithm options",
+                                      "response":  [
+
+                                                   ]
+                                  },
+                                  {
+                                      "request":  {
+                                                      "url":  "{{baseUrl}}/api/analysis-options/validate",
+                                                      "description":  "Validate segmentation parameters. Access: protected.",
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "X-CSRF-TOKEN",
+                                                                         "value":  "{{csrfToken}}"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "raw":  "{\"name\":\"Otsu Demo\",\"algorithm\":\"OTSU\",\"blurKernelSize\":5,\"invert\":false}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               },
+                                                                   "mode":  "raw"
+                                                               }
+                                                  },
+                                      "name":  "POST Validate segmentation parameters",
+                                      "response":  [
+
+                                                   ]
+                                  },
+                                  {
+                                      "request":  {
+                                                      "url":  "{{baseUrl}}/api/images/{{imageId}}/analyses",
+                                                      "description":  "Execute Otsu segmentation. Access: protected.",
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "X-CSRF-TOKEN",
+                                                                         "value":  "{{csrfToken}}"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "raw":  "{\"name\":\"Otsu Demo\",\"algorithm\":\"OTSU\",\"blurKernelSize\":5,\"invert\":false}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               },
+                                                                   "mode":  "raw"
+                                                               }
+                                                  },
+                                      "name":  "POST Execute Otsu segmentation",
+                                      "event":  [
+                                                    {
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "if (pm.response.code === 201) {",
+                                                                                    "  pm.collectionVariables.set(\"analysisId\", pm.response.json().id);",
+                                                                                    "}"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   },
+                                                        "listen":  "test"
+                                                    }
+                                                ],
+                                      "response":  [
+
+                                                   ]
+                                  },
+                                  {
+                                      "request":  {
+                                                      "url":  "{{baseUrl}}/api/images/{{imageId}}/analyses",
+                                                      "description":  "Execute Manual segmentation. Access: protected.",
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "X-CSRF-TOKEN",
+                                                                         "value":  "{{csrfToken}}"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "raw":  "{\"name\":\"Manual Demo\",\"algorithm\":\"MANUAL\",\"blurKernelSize\":5,\"invert\":false,\"threshold\":127}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               },
+                                                                   "mode":  "raw"
+                                                               }
+                                                  },
+                                      "name":  "POST Execute Manual segmentation",
+                                      "event":  [
+                                                    {
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "if (pm.response.code === 201) {",
+                                                                                    "  pm.collectionVariables.set(\"analysisId\", pm.response.json().id);",
+                                                                                    "}"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   },
+                                                        "listen":  "test"
+                                                    }
+                                                ],
+                                      "response":  [
+
+                                                   ]
+                                  },
+                                  {
+                                      "request":  {
+                                                      "url":  "{{baseUrl}}/api/images/{{imageId}}/analyses",
+                                                      "description":  "Execute Adaptive segmentation. Access: protected.",
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "X-CSRF-TOKEN",
+                                                                         "value":  "{{csrfToken}}"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "raw":  "{\"name\":\"Adaptive Demo\",\"algorithm\":\"ADAPTIVE\",\"blurKernelSize\":5,\"invert\":false,\"blockSize\":11,\"c\":2.0}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               },
+                                                                   "mode":  "raw"
+                                                               }
+                                                  },
+                                      "name":  "POST Execute Adaptive segmentation",
+                                      "event":  [
+                                                    {
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "if (pm.response.code === 201) {",
+                                                                                    "  pm.collectionVariables.set(\"analysisId\", pm.response.json().id);",
+                                                                                    "}"
+                                                                                ],
+                                                                       "type":  "text/javascript"
+                                                                   },
+                                                        "listen":  "test"
+                                                    }
+                                                ],
+                                      "response":  [
+
+                                                   ]
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Analyses",
+                     "item":  [
+                                  {
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{baseUrl}}/api/analyses?page=0\u0026size=20",
+                                                      "description":  "List analyses with optional filters. Access: protected.",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "GET List analyses with optional filters",
+                                      "response":  [
+
+                                                   ]
+                                  },
+                                  {
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{baseUrl}}/api/images/{{imageId}}/analyses?page=0\u0026size=20",
+                                                      "description":  "List analyses for an image. Access: protected.",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "GET List analyses for an image",
+                                      "response":  [
+
+                                                   ]
+                                  },
+                                  {
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{baseUrl}}/api/analyses/{{analysisId}}",
+                                                      "description":  "Get analysis details. Access: protected.",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "GET Get analysis details",
+                                      "response":  [
+
+                                                   ]
+                                  },
+                                  {
+                                      "request":  {
+                                                      "url":  "{{baseUrl}}/api/analyses/{{analysisId}}",
+                                                      "description":  "Rename analysis. Access: protected.",
+                                                      "method":  "PATCH",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "X-CSRF-TOKEN",
+                                                                         "value":  "{{csrfToken}}"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "raw":  "{\"name\":\"Updated Analysis\"}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               },
+                                                                   "mode":  "raw"
+                                                               }
+                                                  },
+                                      "name":  "PATCH Rename analysis",
+                                      "response":  [
+
+                                                   ]
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Evaluation",
+                     "item":  [
+                                  {
+                                      "request":  {
+                                                      "url":  "{{baseUrl}}/api/analyses/{{analysisId}}/evaluate",
+                                                      "description":  "Evaluate against ground truth. Access: protected.",
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "X-CSRF-TOKEN",
+                                                                         "value":  "{{csrfToken}}"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "formdata":  [
+                                                                                    {
+                                                                                        "key":  "file",
+                                                                                        "type":  "file",
+                                                                                        "src":  ""
+                                                                                    }
+                                                                                ],
+                                                                   "mode":  "formdata"
+                                                               }
+                                                  },
+                                      "name":  "POST Evaluate against ground truth",
+                                      "response":  [
+
+                                                   ]
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Results",
+                     "item":  [
+                                  {
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{baseUrl}}/api/analyses/{{analysisId}}/mask",
+                                                      "description":  "View segmentation mask. Access: protected.",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "GET View segmentation mask",
+                                      "response":  [
+
+                                                   ]
+                                  },
+                                  {
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{baseUrl}}/api/analyses/{{analysisId}}/overlay",
+                                                      "description":  "View segmentation overlay. Access: protected.",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "GET View segmentation overlay",
+                                      "response":  [
+
+                                                   ]
+                                  },
+                                  {
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{baseUrl}}/api/analyses/{{analysisId}}/mask/download",
+                                                      "description":  "Download mask PNG. Access: protected.",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "GET Download mask PNG",
+                                      "response":  [
+
+                                                   ]
+                                  },
+                                  {
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{baseUrl}}/api/analyses/{{analysisId}}/overlay/download",
+                                                      "description":  "Download overlay PNG. Access: protected.",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "GET Download overlay PNG",
+                                      "response":  [
+
+                                                   ]
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Dashboard",
+                     "item":  [
+                                  {
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "url":  "{{baseUrl}}/api/dashboard/stats",
+                                                      "description":  "Get user dashboard statistics. Access: protected.",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ]
+                                                  },
+                                      "name":  "GET Get user dashboard statistics",
+                                      "response":  [
+
+                                                   ]
+                                  }
+                              ]
+                 }
+             ]
+}
